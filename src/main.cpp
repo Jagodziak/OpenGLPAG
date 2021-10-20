@@ -7,6 +7,8 @@
 
 #include <GLFW/glfw3.h> // musi byæ zawsze po gladzie, biblioteka do tworzenia okna, zczytuje ruch myszy, klawisze itd 
 
+#include <iostream>
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
@@ -56,6 +58,106 @@ int main(int, char**)
     // Setup style
     ImGui::StyleColorsDark();
 
+    // Sekcja Danych wpisanych z palca +++++++++++++++++++++++++++++++
+
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+         0.5f, -0.5f, 0.0f,
+         0.0f,  0.5f, 0.0f
+    };
+
+    // GLuint to samo co unsigned int
+    GLuint VBO; // Vertex buffer object ID variable, Przechowuje wszystkie dane geometrii
+    glGenBuffers(1, &VBO); //funkcja tworz¹ca bufor na karcie graficznej i zapisuj¹ca jego ID w zmiennej VBO
+
+    glBindBuffer(GL_ARRAY_BUFFER, VBO); // GL_ARRAY_BUFFER podpina vertex buffer, to taki bufor co przechowuje werteksy
+
+    //przekazujemy dane do wczesniej stworzonego bufora
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //GL_STATIC_DRAW mówi funkcji ¿e dane bêd¹ u¿ywane tak œrednio czêsto i ona sobie wtedy w dobrym miejsu w pamiêci je u³o¿y
+                           
+    glBindBuffer(GL_ARRAY_BUFFER, 0); // ustawia ¿aden bufor
+
+    // SZEJDERY! **************************************************
+
+    // ----- VERTEX SHADER -----
+
+    //#version 330 core // powiedzenie z jakiej wersji opengla korzystamy. najni¿sza targetowana wersja
+    //layout(location = 0) in vec3 aPos; // [layout(location = 0)]- zaczynaj¹c od pocz¹tku, bex przesuniêcia w buforze
+    //                                   // [in]-wczytaj [vec3]-trzy floaty [aPos]-do zmiennej o nazwie aPos i typie Vec3
+    //
+    //void main()
+    //{
+    //    // gl_Position- zmienna do której MUSISZ wpisaæ pozycje vertexa. Za pomoc¹ tej zmiennej s¹ przekazywane dane do fragment shadera (rysunek)
+    //    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
+    //}
+    const char* vertexShaderSource = "#version 330 core\n"
+        "layout (location = 0) in vec3 aPos;\n"
+        "void main()\n"
+        "{\n"
+        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
+        "}\0";
+
+    GLuint vertexShader;
+    vertexShader = glCreateShader(GL_VERTEX_SHADER); //tworzymy (buffor) vertex shader i zapisujemy jego ID DO ZMIENNEJ vertexShader
+
+    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); //przekazujemy kod do "kontenera" na vertex shader
+    glCompileShader(vertexShader); //kompilujemy vertex shader i tu ju¿ mo¿na powiedzieæ "Stworzyliœmy vertex shader"
+
+    // Sprawdzanie b³êdów kompilacji vertex shadera
+    int  success;
+    char infoLog[512];
+    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // ----- FRAGMENT SHADER -----
+
+    //#version 330 core // To samo co w vertex shaderze
+    //out vec4 FragColor; // Kolor piksela który zostanie wpisany na ekran
+    //
+    //void main()
+    //{
+    //    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); // Wpisujemy kolor do zmiennej FragColor (rgba)
+    //}
+    const char* fragmentShaderSource = "#version 330 core\n"
+    "out vec4 FragColor;\n"
+    "void main()\n"
+    "{\n"
+    "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
+    "}\0";
+
+    GLuint fragmentShader;
+    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
+
+    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glCompileShader(fragmentShader);
+
+    // Sprawdzanie b³êdów kompilacji fragment shadera
+    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
+    if (!success)
+    {
+        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
+        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
+    }
+
+    // TWORZYMY SHADER PROGRAM (SPINAMY VERTEX I FRAGMENT SHADER W JEDNOŒÆ)
+
+    GLuint shaderProgram;
+    shaderProgram = glCreateProgram();
+
+    // Podepnij wczeœniej skompilowane shadery do shaderProgram
+    glAttachShader(shaderProgram, vertexShader);
+    glAttachShader(shaderProgram, fragmentShader);
+    // Dokonaj ³¹czenia shaderów (zlinkuj)
+    glLinkProgram(shaderProgram);
+
+    // Usuñ niepotrzebne shadery (bo s¹ ju¿ czêœci¹ shaderProgram)
+    glDeleteShader(vertexShader);
+    glDeleteShader(fragmentShader);
+
     // Zmienne pomocnicze paremetryzuj¹ce rendering
     bool show_another_window = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -74,37 +176,21 @@ int main(int, char**)
 
         // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            // Zmienne pomocnicze dla imgui
-            static float f = 0.0f;
-            static int counter = 0;
-
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
             ImGui::Checkbox("Another Window", &show_another_window);
 
-            ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            //ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
             // Poni¿ej siê dziej¹ dzikie rzeczy zwi¹zane z rzutowaniem wskaŸnika ImVec4 na float
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
-            ImGui::Button("But¹");
+            //ImGui::Button("But¹");
 
-            if (ImGui::Button("Button"))                            // Buttons return true when clicked (most widgets return true when edited/activated)
-                counter++;
-            ImGui::SameLine();
-            ImGui::Text("counter = %d", counter);
+            //ImGui::SameLine();
+            //ImGui::Text("counter = %d", counter);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
-            ImGui::End();
-        }
-
-        // 3. Show another simple window.
-        if (show_another_window)
-        {
-            ImGui::Begin("Another Window", &show_another_window);   // Pass a pointer to our bool variable (the window will have a closing button that will clear the bool when clicked)
-            ImGui::Text("Hello from another window!");
-            if (ImGui::Button("Close Me"))
-                show_another_window = false;
             ImGui::End();
         }
 
@@ -126,6 +212,9 @@ int main(int, char**)
 
         // Tu jest prawdziwy Remdering
 
+
+
+        // Tu siê koñczy Remdering
 
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
