@@ -1,13 +1,19 @@
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
 #include "imgui_impl_opengl3.h" // biblioteka do renderowania prostych interfejsów graficznych
 #include <stdio.h>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include <glad/glad.h>  // loader funkcji opengl
 
 #include <GLFW/glfw3.h> // musi byæ zawsze po gladzie, biblioteka do tworzenia okna, zczytuje ruch myszy, klawisze itd 
-
-#include <iostream>
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -61,15 +67,44 @@ int main(int, char**)
     // Sekcja Danych wpisanych z palca +++++++++++++++++++++++++++++++
 
     float vertices[] = {
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f,
-         0.0f,  0.5f, 0.0f
+        // front vertices
+         0.5f,  0.5f, 0.5f,  // top right
+         0.5f, -0.5f, 0.5f,  // bottom right
+        -0.5f, -0.5f, 0.5f,  // bottom left
+        -0.5f,  0.5f, 0.5f,   // top left 
+        // back vertices
+         0.5f,  0.5f, -0.5f,  // top right
+         0.5f, -0.5f, -0.5f,  // bottom right
+        -0.5f, -0.5f, -0.5f,  // bottom left
+        -0.5f,  0.5f, -0.5f   // top left 
+    };
+
+    unsigned int indices[] = {  // note that we start from 0!
+        0, 1, 3,   // first triangle
+        1, 2, 3,    // second triangle
+        7, 6, 4,
+        6, 5, 4,
+        4, 5, 0,
+        5, 1, 0,
+        7, 6, 3,
+        6, 3, 2,
+        0, 7, 4,
+        3, 7, 0,
+        1, 6, 5,
+        1, 6, 2
     };
 
     GLuint VAO;
     glGenVertexArrays(1, &VAO);//tworzy vertex array object TO NIE JEST BUFFOR
 
     glBindVertexArray(VAO);
+
+    // Tworzymy bufor do przechowywania naszych indices (Element Buffer Object - EBO)
+    GLuint EBO;
+    glGenBuffers(1, &EBO);
+
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
     // GLuint to samo co unsigned int
     GLuint VBO; // Vertex buffer object ID variable, Przechowuje wszystkie dane geometrii
@@ -95,26 +130,18 @@ int main(int, char**)
 
     // ----- VERTEX SHADER -----
 
-    //#version 330 core // powiedzenie z jakiej wersji opengla korzystamy. najni¿sza targetowana wersja
-    //layout(location = 0) in vec3 aPos; // [layout(location = 0)]- zaczynaj¹c od pocz¹tku, bez przesuniêcia w buforze
-    //                                   // [in]-wczytaj [vec3]-trzy floaty [aPos]-do zmiennej o nazwie aPos i typie Vec3
-    //
-    //void main()
-    //{
-    //    // gl_Position- zmienna do której MUSISZ wpisaæ pozycje vertexa. Za pomoc¹ tej zmiennej s¹ przekazywane dane do fragment shadera (rysunek)
-    //    gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-    //}
-    const char* vertexShaderSource = "#version 330 core\n"
-        "layout (location = 0) in vec3 aPos;\n"
-        "void main()\n"
-        "{\n"
-        "   gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);\n"
-        "}\0";
+    // £adujemy shader z pliku
+    std::ifstream shaderFile("res/shaders/basic.vert");
+    std::stringstream buffer;
+    buffer << shaderFile.rdbuf();
+
+    std::string vertexShaderSource = buffer.str();
+    const char* vertShader = vertexShaderSource.c_str();
 
     GLuint vertexShader;
     vertexShader = glCreateShader(GL_VERTEX_SHADER); //tworzymy (buffor) vertex shader i zapisujemy jego ID DO ZMIENNEJ vertexShader
 
-    glShaderSource(vertexShader, 1, &vertexShaderSource, NULL); //przekazujemy kod do "kontenera" na vertex shader
+    glShaderSource(vertexShader, 1, &vertShader, NULL); //przekazujemy kod do "kontenera" na vertex shader
     glCompileShader(vertexShader); //kompilujemy vertex shader i tu ju¿ mo¿na powiedzieæ "Stworzyliœmy vertex shader"
 
     // Sprawdzanie b³êdów kompilacji vertex shadera
@@ -127,26 +154,19 @@ int main(int, char**)
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    // ----- FRAGMENT SHADER -----
+    // ----- FRAGMENT SHA DER -----
 
-    //#version 330 core // To samo co w vertex shaderze
-    //out vec4 FragColor; // Kolor piksela który zostanie wpisany na ekran
-    //
-    //void main()
-    //{
-    //    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f); // Wpisujemy kolor do zmiennej FragColor (rgba)
-    //}
-    const char* fragmentShaderSource = "#version 330 core\n"
-    "out vec4 FragColor;\n"
-    "void main()\n"
-    "{\n"
-    "    FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);\n"
-    "}\0";
+    std::ifstream shaderFile2("res/shaders/basic.frag");
+    std::stringstream buffer2;
+    buffer2 << shaderFile2.rdbuf();
+
+    std::string fragmentShaderSource = buffer2.str();
+    const char* fragShader = fragmentShaderSource.c_str();
 
     GLuint fragmentShader;
     fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
 
-    glShaderSource(fragmentShader, 1, &fragmentShaderSource, NULL);
+    glShaderSource(fragmentShader, 1, &fragShader, NULL);
     glCompileShader(fragmentShader);
 
     // Sprawdzanie b³êdów kompilacji fragment shadera
@@ -173,8 +193,11 @@ int main(int, char**)
     glDeleteShader(fragmentShader);
 
     // Zmienne pomocnicze paremetryzuj¹ce rendering
-    bool show_another_window = false;
+    bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
+    glm::mat4 modelMatrix = glm::mat4(1.0f); // Macierz transformacji do ustawienia obiektu w œwiecie, zainicjalizowaliœmy j¹ macierz¹ jednostkw¹- przez to 1.0f
+    float rotationX = 0.0f;
+    float rotationY = 0.0f;
 
     // ============================================ Main loop =======================================================================
 
@@ -193,9 +216,10 @@ int main(int, char**)
             ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
 
             ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
-            ImGui::Checkbox("Another Window", &show_another_window);
+            ImGui::Checkbox("Draw wireframe", &wireframe);
 
-            //ImGui::SliderFloat("float", &f, 0.0f, 1.0f);            // Edit 1 float using a slider from 0.0f to 1.0f
+            ImGui::SliderFloat("Rotation X", &rotationX, 0.0f, 360.0f);
+            ImGui::SliderFloat("Rotation Y", &rotationY, 0.0f, 360.0f);
             // Poni¿ej siê dziej¹ dzikie rzeczy zwi¹zane z rzutowaniem wskaŸnika ImVec4 na float
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
@@ -223,12 +247,28 @@ int main(int, char**)
                                                                                     // Dzia³a to tak, ze za ka¿dym grazem gdy w przysz³oœci wywo³am funkcje 
                                                                                     // glClear to bufor nadpisze sie tym w³aœnie kolorem
         glClear(GL_COLOR_BUFFER_BIT); //nadpisuje wszystko kolorem
+        
+        if (wireframe)
+            glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        else
+            glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
+        // Przygotowanie macierzy
+        modelMatrix = glm::mat4(1.0f); // Reset macierzy
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationX), glm::vec3(1.0f, 0.0f, 0.0f));
+        modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
 
         // Tu jest prawdziwy Remdering
 
+        int modelLocation = glGetUniformLocation(shaderProgram, "model"); // Funkcja szuka uniforma "model" w shaderProgram
         glUseProgram(shaderProgram);
+        // Ustawiamy wartoœæ uniforma "model" na zawartoœæ zmiennej modelMatrix
+        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix)); // Glm value ptr wyci¹ga wskaŸnik potrzebny dla funkcji glUniform
+
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3); // Rysujemy trójk¹ty zaczynaj¹c od pocz¹tku i bior¹c pod uwagê 3 vertexy
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); //rysujemy trójk¹ty u¿ywaj¹c EBO
+        //glDrawArrays(GL_TRIANGLES, 0, 3); // Rysujemy trójk¹ty zaczynaj¹c od pocz¹tku i bior¹c pod uwagê 3 vertexy (bez EBO)
+        glBindVertexArray(0);
 
         // Tu siê koñczy Remdering
 
@@ -240,7 +280,7 @@ int main(int, char**)
 
     // Cleanup
     ImGui_ImplOpenGL3_Shutdown();
-    ImGui_ImplGlfw_Shutdown();
+    ImGui_ImplGlfw_Shutdown(); 
     ImGui::DestroyContext();
 
     glfwDestroyWindow(window);
