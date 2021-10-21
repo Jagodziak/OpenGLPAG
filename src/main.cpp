@@ -66,6 +66,11 @@ int main(int, char**)
          0.0f,  0.5f, 0.0f
     };
 
+    GLuint VAO;
+    glGenVertexArrays(1, &VAO);//tworzy vertex array object TO NIE JEST BUFFOR
+
+    glBindVertexArray(VAO);
+
     // GLuint to samo co unsigned int
     GLuint VBO; // Vertex buffer object ID variable, Przechowuje wszystkie dane geometrii
     glGenBuffers(1, &VBO); //funkcja tworz¹ca bufor na karcie graficznej i zapisuj¹ca jego ID w zmiennej VBO
@@ -74,7 +79,16 @@ int main(int, char**)
 
     //przekazujemy dane do wczesniej stworzonego bufora
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //GL_STATIC_DRAW mówi funkcji ¿e dane bêd¹ u¿ywane tak œrednio czêsto i ona sobie wtedy w dobrym miejsu w pamiêci je u³o¿y
-                           
+                        
+    // Ustawienie wskaŸnika atrybutu
+    // location = 0 w shaderze odwo³uje siê do indexu
+    // 3 mówi ¿e potem w shaderze bêdzie to zmienna typu vec3
+    // argument pointer (ostatni) mówi o ile bajtów musimy siê przesun¹æ ¿eby znaleŸæ pierwsz¹ interesuj¹c¹ nas wartoœæ
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    glEnableVertexAttribArray(0); // Zacznij u¿ywaæ attribute pointera o indexie 0
+
+    glBindVertexArray(0);
+
     glBindBuffer(GL_ARRAY_BUFFER, 0); // ustawia ¿aden bufor
 
     // SZEJDERY! **************************************************
@@ -82,7 +96,7 @@ int main(int, char**)
     // ----- VERTEX SHADER -----
 
     //#version 330 core // powiedzenie z jakiej wersji opengla korzystamy. najni¿sza targetowana wersja
-    //layout(location = 0) in vec3 aPos; // [layout(location = 0)]- zaczynaj¹c od pocz¹tku, bex przesuniêcia w buforze
+    //layout(location = 0) in vec3 aPos; // [layout(location = 0)]- zaczynaj¹c od pocz¹tku, bez przesuniêcia w buforze
     //                                   // [in]-wczytaj [vec3]-trzy floaty [aPos]-do zmiennej o nazwie aPos i typie Vec3
     //
     //void main()
@@ -212,7 +226,9 @@ int main(int, char**)
 
         // Tu jest prawdziwy Remdering
 
-
+        glUseProgram(shaderProgram);
+        glBindVertexArray(VAO);
+        glDrawArrays(GL_TRIANGLES, 0, 3); // Rysujemy trójk¹ty zaczynaj¹c od pocz¹tku i bior¹c pod uwagê 3 vertexy
 
         // Tu siê koñczy Remdering
 
