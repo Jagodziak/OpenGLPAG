@@ -7,6 +7,9 @@
 #include "imgui_impl_opengl3.h" // biblioteka do renderowania prostych interfejsów graficznych
 #include <stdio.h>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -68,15 +71,16 @@ int main(int, char**)
 
     float vertices[] = {
         // front vertices
-         0.5f,  0.5f, 0.5f,  // top right
-         0.5f, -0.5f, 0.5f,  // bottom right
-        -0.5f, -0.5f, 0.5f,  // bottom left
-        -0.5f,  0.5f, 0.5f,   // top left 
+        // vec3 pos, vec2 uv
+         0.5f,  0.5f, 0.5f,  1.0f, 1.0f,  // top right
+         0.5f, -0.5f, 0.5f,  1.0f, 0.0f,  // bottom right
+        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,  // bottom left
+        -0.5f,  0.5f, 0.5f,  0.0f, 1.0f,   // top left 
         // back vertices
-         0.5f,  0.5f, -0.5f,  // top right
-         0.5f, -0.5f, -0.5f,  // bottom right
-        -0.5f, -0.5f, -0.5f,  // bottom left
-        -0.5f,  0.5f, -0.5f   // top left 
+         0.5f,  0.5f, -0.5f,  0.0f, 0.0f,  // top right
+         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // bottom right
+        -0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  // bottom left
+        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f  // top left 
     };
 
     unsigned int indices[] = {  // note that we start from 0!
@@ -93,6 +97,31 @@ int main(int, char**)
         1, 6, 5,
         1, 6, 2
     };
+
+    // Wczytywanie tekstury z pliku za pomoc¹ biblioteki stb_image
+    int width, height, nrChannels;
+    unsigned char* data = stbi_load("res/textures/stone.jpg", &width, &height, &nrChannels, 0);
+
+    // Przekazujemy teksturê do karty graficznej
+    GLuint texture;
+    glGenTextures(1, &texture);
+
+    glBindTexture(GL_TEXTURE_2D, texture);
+
+    // Ustawienie filtrowania
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    // Ustawienie powtarzania
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
+    //przekazujemy dane do gpu. GL_UNSIGNED_BYTE jest dlatego ¿e wy¿ej definiujemy unsigned char* data  char to jest bit i git
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    // Usuwamy teksturê z ramu po przekazaniu do gpu
+    stbi_image_free(data);
 
     GLuint VAO;
     glGenVertexArrays(1, &VAO);//tworzy vertex array object TO NIE JEST BUFFOR
@@ -119,8 +148,12 @@ int main(int, char**)
     // location = 0 w shaderze odwo³uje siê do indexu
     // 3 mówi ¿e potem w shaderze bêdzie to zmienna typu vec3
     // argument pointer (ostatni) mówi o ile bajtów musimy siê przesun¹æ ¿eby znaleŸæ pierwsz¹ interesuj¹c¹ nas wartoœæ
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // 3 * sizeof(float) - to jest stride i definiuje przeskok miêdzy kolejnymi vertexami
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0); // Zacznij u¿ywaæ attribute pointera o indexie 0
+
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
 
@@ -243,10 +276,13 @@ int main(int, char**)
 
         glViewport(0, 0, display_w, display_h); //przekazanie rozmiaru okna do open gl.
 
+        // U¿ywaj bufora g³êbokoœci (rozwi¹zuje problemy z sortowaniem)
+        glEnable(GL_DEPTH_TEST);
+
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);   // Ustawia kolor czyszczenia ekranu. 
                                                                                     // Dzia³a to tak, ze za ka¿dym grazem gdy w przysz³oœci wywo³am funkcje 
                                                                                     // glClear to bufor nadpisze sie tym w³aœnie kolorem
-        glClear(GL_COLOR_BUFFER_BIT); //nadpisuje wszystko kolorem
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //nadpisuje wszystko kolorem i clearuje zbufor
         
         if (wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -265,6 +301,7 @@ int main(int, char**)
         // Ustawiamy wartoœæ uniforma "model" na zawartoœæ zmiennej modelMatrix
         glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix)); // Glm value ptr wyci¹ga wskaŸnik potrzebny dla funkcji glUniform
 
+        glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); //rysujemy trójk¹ty u¿ywaj¹c EBO
         //glDrawArrays(GL_TRIANGLES, 0, 3); // Rysujemy trójk¹ty zaczynaj¹c od pocz¹tku i bior¹c pod uwagê 3 vertexy (bez EBO)
