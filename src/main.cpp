@@ -23,6 +23,8 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
+void createMenger(glm::mat4& model, glm::vec3 cubePositions[], GLuint& shaderProgram, int iteration, int iterations);
+
 int main(int, char**)
 {
     // Ustawienie wyœwietlania b³êdów okna
@@ -231,6 +233,32 @@ int main(int, char**)
     glm::mat4 modelMatrix = glm::mat4(1.0f); // Macierz transformacji do ustawienia obiektu w œwiecie, zainicjalizowaliœmy j¹ macierz¹ jednostkw¹- przez to 1.0f
     float rotationX = 0.0f;
     float rotationY = 0.0f;
+    int iterations = 1;
+    glm::vec3 cubePositions[] = {
+        // bottom
+        glm::vec3(1.0f, -1.0f, 0.0f),
+        glm::vec3(1.0f, -1.0f, 1.0f),
+        glm::vec3(0.0f, -1.0f, 1.0f),
+        glm::vec3(-1.0f, -1.0f, 1.0f),
+        glm::vec3(-1.0f, -1.0f, 0.0f),
+        glm::vec3(-1.0f, -1.0f, -1.0f),
+        glm::vec3(0.0f, -1.0f, -1.0f),
+        glm::vec3(1.0f, -1.0f, -1.0f),
+        // mid
+        glm::vec3(1.0f, 0.0f, 1.0f),
+        glm::vec3(-1.0f, 0.0f, 1.0f),
+        glm::vec3(-1.0f, 0.0f, -1.0f),
+        glm::vec3(1.0f, 0.0f, -1.0f),
+        // top
+        glm::vec3(1.0f, 1.0f, 0.0f),
+        glm::vec3(1.0f, 1.0f, 1.0f),
+        glm::vec3(0.0f, 1.0f, 1.0f),
+        glm::vec3(-1.0f, 1.0f, 1.0f),
+        glm::vec3(-1.0f, 1.0f, 0.0f),
+        glm::vec3(-1.0f, 1.0f, -1.0f),
+        glm::vec3(0.0f, 1.0f, -1.0f),
+        glm::vec3(1.0f, 1.0f, -1.0f),
+    };
 
     // ============================================ Main loop =======================================================================
 
@@ -253,6 +281,7 @@ int main(int, char**)
 
             ImGui::SliderFloat("Rotation X", &rotationX, 0.0f, 360.0f);
             ImGui::SliderFloat("Rotation Y", &rotationY, 0.0f, 360.0f);
+            ImGui::SliderInt("Iterations", &iterations, 1, 5);
             // Poni¿ej siê dziej¹ dzikie rzeczy zwi¹zane z rzutowaniem wskaŸnika ImVec4 na float
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
@@ -303,7 +332,9 @@ int main(int, char**)
 
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); //rysujemy trójk¹ty u¿ywaj¹c EBO
+
+        createMenger(modelMatrix, cubePositions, shaderProgram, 0, iterations);
+        //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); //rysujemy trójk¹ty u¿ywaj¹c EBO
         //glDrawArrays(GL_TRIANGLES, 0, 3); // Rysujemy trójk¹ty zaczynaj¹c od pocz¹tku i bior¹c pod uwagê 3 vertexy (bez EBO)
         glBindVertexArray(0);
 
@@ -324,4 +355,27 @@ int main(int, char**)
     glfwTerminate();
 
     return 0;
+}
+
+void createMenger(glm::mat4& model, glm::vec3 cubePositions[], GLuint& shaderProgram, int iteration, int iterations)
+{
+    if (iteration == iterations)
+    {
+        int modelLocation = glGetUniformLocation(shaderProgram, "model");
+        glUseProgram(shaderProgram);
+        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
+        return;
+    }
+    else
+    {
+        for (size_t i = 0; i < 20; i++)
+        {
+            glm::mat4 model_local = glm::mat4(1.0f);
+            model_local = glm::scale(model_local, glm::vec3(1.0f / 3.0f));
+            model_local = glm::translate(model_local, cubePositions[i]);
+            model_local = model * model_local;
+            createMenger(model_local, cubePositions, shaderProgram, iteration + 1, iterations);
+        }
+    }
 }
