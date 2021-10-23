@@ -23,7 +23,7 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void createMenger(glm::mat4& model, glm::vec3 cubePositions[], GLuint& shaderProgram, int iteration, int iterations);
+void drawMengerCube(GLuint shaderProgram, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration = 0);
 
 int main(int, char**)
 {
@@ -71,33 +71,51 @@ int main(int, char**)
 
     // Sekcja Danych wpisanych z palca +++++++++++++++++++++++++++++++
 
-    float vertices[] = {
-        // front vertices
-        // vec3 pos, vec2 uv
-         0.5f,  0.5f, 0.5f,  1.0f, 1.0f,  // top right
-         0.5f, -0.5f, 0.5f,  1.0f, 0.0f,  // bottom right
-        -0.5f, -0.5f, 0.5f,  0.0f, 0.0f,  // bottom left
-        -0.5f,  0.5f, 0.5f,  0.0f, 1.0f,   // top left 
-        // back vertices
-         0.5f,  0.5f, -0.5f,  0.0f, 0.0f,  // top right
-         0.5f, -0.5f, -0.5f,  0.0f, 1.0f,  // bottom right
-        -0.5f, -0.5f, -0.5f,  1.0f, 1.0f,  // bottom left
-        -0.5f,  0.5f, -0.5f,  1.0f, 0.0f  // top left 
+    float vertices[] = { 
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, //front
+         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
+
+         0.5f, -0.5f, -0.5f,    0.0f, 0.0f, //back
+        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, //top
+        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
+         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
+
+        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, //bottom
+        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
+         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,
+         0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
+
+        -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, //left
+        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+        -0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
+        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
+
+         0.5f,  0.5f, -0.5f,    0.0f, 0.0f, //right
+         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
+         0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
+         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
     };
 
-    unsigned int indices[] = {  // note that we start from 0!
-        0, 1, 3,   // first triangle
-        1, 2, 3,    // second triangle
-        7, 6, 4,
-        6, 5, 4,
-        4, 5, 0,
-        5, 1, 0,
-        7, 6, 3,
-        6, 3, 2,
-        0, 7, 4,
-        3, 7, 0,
-        1, 6, 5,
-        1, 6, 2
+    unsigned int indices[] = {  // indeksy, od zera. wskazuje z których wierzcho³ków ma byæ z³o¿ona œcianka. 
+        0,1,3, // tri 0
+        1,2,3, // tri 1
+        4,5,7, // tri 2
+        5,6,7,
+        8,9,11,
+        9,10,11,
+        12,13,15,
+        13,14,15,
+        16,17,19,
+        17,18,19,
+        20,21,23,
+        21,22,23
     };
 
     // Wczytywanie tekstury z pliku za pomoc¹ biblioteki stb_image
@@ -234,6 +252,7 @@ int main(int, char**)
     float rotationX = 0.0f;
     float rotationY = 0.0f;
     int iterations = 1;
+    // Przechowuje pozycje szeœcianów dla renderowania kostki mengera
     glm::vec3 cubePositions[] = {
         // bottom
         glm::vec3(1.0f, -1.0f, 0.0f),
@@ -281,7 +300,7 @@ int main(int, char**)
 
             ImGui::SliderFloat("Rotation X", &rotationX, 0.0f, 360.0f);
             ImGui::SliderFloat("Rotation Y", &rotationY, 0.0f, 360.0f);
-            ImGui::SliderInt("Iterations", &iterations, 1, 5);
+            ImGui::SliderInt("Iterations", &iterations, 0, 5);
             // Poni¿ej siê dziej¹ dzikie rzeczy zwi¹zane z rzutowaniem wskaŸnika ImVec4 na float
             ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
 
@@ -325,15 +344,10 @@ int main(int, char**)
 
         // Tu jest prawdziwy Remdering
 
-        int modelLocation = glGetUniformLocation(shaderProgram, "model"); // Funkcja szuka uniforma "model" w shaderProgram
-        glUseProgram(shaderProgram);
-        // Ustawiamy wartoœæ uniforma "model" na zawartoœæ zmiennej modelMatrix
-        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(modelMatrix)); // Glm value ptr wyci¹ga wskaŸnik potrzebny dla funkcji glUniform
-
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
 
-        createMenger(modelMatrix, cubePositions, shaderProgram, 0, iterations);
+        drawMengerCube(shaderProgram, iterations, modelMatrix, cubePositions, 20);
         //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); //rysujemy trójk¹ty u¿ywaj¹c EBO
         //glDrawArrays(GL_TRIANGLES, 0, 3); // Rysujemy trójk¹ty zaczynaj¹c od pocz¹tku i bior¹c pod uwagê 3 vertexy (bez EBO)
         glBindVertexArray(0);
@@ -357,25 +371,24 @@ int main(int, char**)
     return 0;
 }
 
-void createMenger(glm::mat4& model, glm::vec3 cubePositions[], GLuint& shaderProgram, int iteration, int iterations)
+void drawMengerCube(GLuint shaderProgram, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration)
 {
-    if (iteration == iterations)
+    if (currentIteration == maxIterations)
     {
-        int modelLocation = glGetUniformLocation(shaderProgram, "model");
         glUseProgram(shaderProgram);
-        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model));
+        int modelLocation = glGetUniformLocation(shaderProgram, "model"); // Funkcja szuka uniforma "model" w shaderProgram
+        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model)); // Przekazujemy dane macierzy 4x4 do uniforma o nazwie model
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-        return;
     }
     else
     {
-        for (size_t i = 0; i < 20; i++)
+        for (int i = 0; i < cubePositionsCount; i++)
         {
-            glm::mat4 model_local = glm::mat4(1.0f);
-            model_local = glm::scale(model_local, glm::vec3(1.0f / 3.0f));
-            model_local = glm::translate(model_local, cubePositions[i]);
-            model_local = model * model_local;
-            createMenger(model_local, cubePositions, shaderProgram, iteration + 1, iterations);
+            glm::mat4 tempModel = glm::mat4(1.0f); //tempmodel to maciez pomocnicza do ustawiania cube positions
+            tempModel = glm::scale(tempModel, glm::vec3(1.0f / 3.0f));
+            tempModel = glm::translate(tempModel, cubePositions[i]);
+            tempModel = model * tempModel;//pol¹czenie z obróceniem i transformacj¹ z poprzedniej iteracji
+            drawMengerCube(shaderProgram, maxIterations, tempModel, cubePositions, cubePositionsCount, currentIteration + 1);
         }
     }
 }
