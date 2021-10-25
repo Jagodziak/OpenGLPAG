@@ -7,16 +7,18 @@
 #include "imgui_impl_opengl3.h" // biblioteka do renderowania prostych interfejsów graficznych
 #include <stdio.h>
 
-#define STB_IMAGE_IMPLEMENTATION
+#define STB_IMAGE_IMPLEMENTATION 
 #include "stb_image.h"
 
-#include <glm/glm.hpp>
+#include <glm/glm.hpp> 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include <glad/glad.h>  // loader funkcji opengl
 
-#include <GLFW/glfw3.h> // musi byæ zawsze po gladzie, biblioteka do tworzenia okna, zczytuje ruch myszy, klawisze itd 
+#include <GLFW/glfw3.h> //biblioteka do tworzenia okna, zczytuje ruch myszy, klawisze itd 
+
+const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -25,7 +27,7 @@ static void glfw_error_callback(int error, const char* description)
 
 void drawMengerCube(GLuint shaderProgram, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration = 0);
 
-int main(int, char**)
+int main() 
 {
     // Ustawienie wyœwietlania b³êdów okna
     glfwSetErrorCallback(glfw_error_callback);
@@ -37,16 +39,17 @@ int main(int, char**)
     // Ustawienie minimalnej wspieranej wersji OpenGL (4.3)
     const char* glsl_version = "#version 430";
     // Parametry glfw
+    glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
-    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);  //mówimy ¿e bêdziemy korzyctaæ z kotekstu core (tego nowego, trudniejszego ale szybszego)
+    glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
     // Tworzenie okna
-    GLFWwindow* window = glfwCreateWindow(1280, 720, "Za*ebiste PAGI z Filipem :)", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Zadanie 1- Kostka", NULL, NULL);
     if (window == NULL)
         return 1;
-    glfwMakeContextCurrent(window);
+    glfwMakeContextCurrent(window); 
     glfwSwapInterval(1); // Enable vsync- synchronizacja pionowa- blokuje fps ¿eby zsynchronizowaæ go z czêstotliwoœci¹ odœwie¿ania monitora
 
     // Initialize OpenGL loader
@@ -69,7 +72,6 @@ int main(int, char**)
     // Setup style
     ImGui::StyleColorsDark();
 
-    // Sekcja Danych wpisanych z palca +++++++++++++++++++++++++++++++
 
     float vertices[] = { 
         -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, //front
@@ -103,10 +105,10 @@ int main(int, char**)
          0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
     };
 
-    unsigned int indices[] = {  // indeksy, od zera. wskazuje z których wierzcho³ków ma byæ z³o¿ona œcianka. 
-        0,1,3, // tri 0
-        1,2,3, // tri 1
-        4,5,7, // tri 2
+    unsigned int indices[] = {  
+        0,1,3, 
+        1,2,3, 
+        4,5,7, 
         5,6,7,
         8,9,11,
         9,10,11,
@@ -120,10 +122,10 @@ int main(int, char**)
 
     // Wczytywanie tekstury z pliku za pomoc¹ biblioteki stb_image
     int width, height, nrChannels;
-    unsigned char* data = stbi_load("res/textures/stone.jpg", &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load("res/textures/Opalka.jpg", &width, &height, &nrChannels, 0);
 
     // Przekazujemy teksturê do karty graficznej
-    GLuint texture;
+    GLuint texture; 
     glGenTextures(1, &texture);
 
     glBindTexture(GL_TEXTURE_2D, texture);
@@ -136,50 +138,40 @@ int main(int, char**)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
-    //przekazujemy dane do gpu. GL_UNSIGNED_BYTE jest dlatego ¿e wy¿ej definiujemy unsigned char* data  char to jest bit i git
+    //przekazujemy dane do gpu
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // Usuwamy teksturê z ramu po przekazaniu do gpu
+    // Usuwamy teksturê z ramu
     stbi_image_free(data);
 
     GLuint VAO;
-    glGenVertexArrays(1, &VAO);//tworzy vertex array object TO NIE JEST BUFFOR
+    glGenVertexArrays(1, &VAO);
 
     glBindVertexArray(VAO);
 
-    // Tworzymy bufor do przechowywania naszych indices (Element Buffer Object - EBO)
     GLuint EBO;
     glGenBuffers(1, &EBO);
 
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
 
-    // GLuint to samo co unsigned int
     GLuint VBO; // Vertex buffer object ID variable, Przechowuje wszystkie dane geometrii
     glGenBuffers(1, &VBO); //funkcja tworz¹ca bufor na karcie graficznej i zapisuj¹ca jego ID w zmiennej VBO
 
-    glBindBuffer(GL_ARRAY_BUFFER, VBO); // GL_ARRAY_BUFFER podpina vertex buffer, to taki bufor co przechowuje werteksy
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
     //przekazujemy dane do wczesniej stworzonego bufora
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); //GL_STATIC_DRAW mówi funkcji ¿e dane bêd¹ u¿ywane tak œrednio czêsto i ona sobie wtedy w dobrym miejsu w pamiêci je u³o¿y
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); 
                         
     // Ustawienie wskaŸnika atrybutu
-    // location = 0 w shaderze odwo³uje siê do indexu
-    // 3 mówi ¿e potem w shaderze bêdzie to zmienna typu vec3
-    // argument pointer (ostatni) mówi o ile bajtów musimy siê przesun¹æ ¿eby znaleŸæ pierwsz¹ interesuj¹c¹ nas wartoœæ
-    // 3 * sizeof(float) - to jest stride i definiuje przeskok miêdzy kolejnymi vertexami
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); // Zacznij u¿ywaæ attribute pointera o indexie 0
+    glEnableVertexAttribArray(0); // aktywowanie attribute pointera o indexie 0
 
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindVertexArray(0);
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0); // ustawia ¿aden bufor
-
-    // SZEJDERY! **************************************************
 
     // ----- VERTEX SHADER -----
 
@@ -192,10 +184,10 @@ int main(int, char**)
     const char* vertShader = vertexShaderSource.c_str();
 
     GLuint vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER); //tworzymy (buffor) vertex shader i zapisujemy jego ID DO ZMIENNEJ vertexShader
+    vertexShader = glCreateShader(GL_VERTEX_SHADER);
 
-    glShaderSource(vertexShader, 1, &vertShader, NULL); //przekazujemy kod do "kontenera" na vertex shader
-    glCompileShader(vertexShader); //kompilujemy vertex shader i tu ju¿ mo¿na powiedzieæ "Stworzyliœmy vertex shader"
+    glShaderSource(vertexShader, 1, &vertShader, NULL); 
+    glCompileShader(vertexShader); 
 
     // Sprawdzanie b³êdów kompilacji vertex shadera
     int  success;
@@ -207,7 +199,7 @@ int main(int, char**)
         std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    // ----- FRAGMENT SHA DER -----
+    // ----- FRAGMENT SHADER -----
 
     std::ifstream shaderFile2("res/shaders/basic.frag");
     std::stringstream buffer2;
@@ -230,25 +222,23 @@ int main(int, char**)
         std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
     }
 
-    // TWORZYMY SHADER PROGRAM (SPINAMY VERTEX I FRAGMENT SHADER W JEDNOŒÆ)
+    //SHADER PROGRAM 
 
     GLuint shaderProgram;
     shaderProgram = glCreateProgram();
 
-    // Podepnij wczeœniej skompilowane shadery do shaderProgram
     glAttachShader(shaderProgram, vertexShader);
     glAttachShader(shaderProgram, fragmentShader);
-    // Dokonaj ³¹czenia shaderów (zlinkuj)
     glLinkProgram(shaderProgram);
 
-    // Usuñ niepotrzebne shadery (bo s¹ ju¿ czêœci¹ shaderProgram)
     glDeleteShader(vertexShader);
     glDeleteShader(fragmentShader);
 
     // Zmienne pomocnicze paremetryzuj¹ce rendering
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    glm::mat4 modelMatrix = glm::mat4(1.0f); // Macierz transformacji do ustawienia obiektu w œwiecie, zainicjalizowaliœmy j¹ macierz¹ jednostkw¹- przez to 1.0f
+    ImVec4 color = ImVec4(1.0f, 1.0f, 1.00f, 1.00f);
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
     float rotationX = 0.0f;
     float rotationY = 0.0f;
     int iterations = 1;
@@ -281,56 +271,37 @@ int main(int, char**)
 
     // ============================================ Main loop =======================================================================
 
-    while (!glfwWindowShouldClose(window)) //sprawdzamy czy zostal klikniêty X (zamkniête okno)
+    while (!glfwWindowShouldClose(window))
     {
-        // Poll and handle events (inputs, window resize, etc.)
-        glfwPollEvents(); //konieczna do dzia³ania klawiatury i myszy, generalnie to zbiera input
+        glfwPollEvents(); //zbiera input
 
-        // Boilerplate, inicjalizuje imgui i tyle
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
         ImGui::NewFrame();
 
-        // 2. Show a simple window that we create ourselves. We use a Begin/End pair to created a named window.
         {
-            ImGui::Begin("Hello, world!");                          // Create a window called "Hello, world!" and append into it.
-
-            ImGui::Text("This is some useful text.");               // Display some text (you can use a format strings too)
+            ImGui::Begin("Okienko");                        
+               
             ImGui::Checkbox("Draw wireframe", &wireframe);
 
             ImGui::SliderFloat("Rotation X", &rotationX, 0.0f, 360.0f);
             ImGui::SliderFloat("Rotation Y", &rotationY, 0.0f, 360.0f);
             ImGui::SliderInt("Iterations", &iterations, 0, 5);
-            // Poni¿ej siê dziej¹ dzikie rzeczy zwi¹zane z rzutowaniem wskaŸnika ImVec4 na float
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); // Edit 3 floats representing a color
+            ImGui::ColorEdit3("texture color", (float*)&color);
+            ImGui::ColorEdit3("clear color", (float*)&clear_color); 
 
-            //ImGui::Button("But¹");
-
-            //ImGui::SameLine();
-            //ImGui::Text("counter = %d", counter);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
         }
 
-        // Rendering =============================
-        
-        // Imgui ui render
-        ImGui::Render();
-
-        int display_w, display_h;
-        glfwMakeContextCurrent(window);
-        glfwGetFramebufferSize(window, &display_w, &display_h); //zwraca rozmiar okna (dok³adnie to framebufora)
-
-        glViewport(0, 0, display_w, display_h); //przekazanie rozmiaru okna do open gl.
+        glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
         // U¿ywaj bufora g³êbokoœci (rozwi¹zuje problemy z sortowaniem)
         glEnable(GL_DEPTH_TEST);
 
-        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);   // Ustawia kolor czyszczenia ekranu. 
-                                                                                    // Dzia³a to tak, ze za ka¿dym grazem gdy w przysz³oœci wywo³am funkcje 
-                                                                                    // glClear to bufor nadpisze sie tym w³aœnie kolorem
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //nadpisuje wszystko kolorem i clearuje zbufor
+        glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);  
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
         
         if (wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -338,22 +309,25 @@ int main(int, char**)
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
         // Przygotowanie macierzy
-        modelMatrix = glm::mat4(1.0f); // Reset macierzy
+        modelMatrix = glm::mat4(1.0f);
         modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationX), glm::vec3(1.0f, 0.0f, 0.0f));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
 
-        // Tu jest prawdziwy Remdering
 
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
 
+        glUseProgram(shaderProgram);
+
+        int colorLocation = glGetUniformLocation(shaderProgram, "color");
+        glUniform4f(colorLocation, color.x, color.y, color.z, color.w);
+
         drawMengerCube(shaderProgram, iterations, modelMatrix, cubePositions, 20);
-        //glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0); //rysujemy trójk¹ty u¿ywaj¹c EBO
-        //glDrawArrays(GL_TRIANGLES, 0, 3); // Rysujemy trójk¹ty zaczynaj¹c od pocz¹tku i bior¹c pod uwagê 3 vertexy (bez EBO)
+
         glBindVertexArray(0);
 
-        // Tu siê koñczy Remdering
-
+        // Imgui ui render
+        ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwMakeContextCurrent(window);
@@ -375,19 +349,18 @@ void drawMengerCube(GLuint shaderProgram, int maxIterations, glm::mat4& model, g
 {
     if (currentIteration == maxIterations)
     {
-        glUseProgram(shaderProgram);
-        int modelLocation = glGetUniformLocation(shaderProgram, "model"); // Funkcja szuka uniforma "model" w shaderProgram
-        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model)); // Przekazujemy dane macierzy 4x4 do uniforma o nazwie model
+        int modelLocation = glGetUniformLocation(shaderProgram, "model"); 
+        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model)); 
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
     else
     {
         for (int i = 0; i < cubePositionsCount; i++)
         {
-            glm::mat4 tempModel = glm::mat4(1.0f); //tempmodel to maciez pomocnicza do ustawiania cube positions
+            glm::mat4 tempModel = glm::mat4(1.0f);
             tempModel = glm::scale(tempModel, glm::vec3(1.0f / 3.0f));
             tempModel = glm::translate(tempModel, cubePositions[i]);
-            tempModel = model * tempModel;//pol¹czenie z obróceniem i transformacj¹ z poprzedniej iteracji
+            tempModel = model * tempModel;
             drawMengerCube(shaderProgram, maxIterations, tempModel, cubePositions, cubePositionsCount, currentIteration + 1);
         }
     }
