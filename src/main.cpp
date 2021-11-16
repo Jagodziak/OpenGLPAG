@@ -1,6 +1,4 @@
 #include <iostream>
-#include <fstream>
-#include <sstream>
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
@@ -18,6 +16,8 @@
 
 #include <GLFW/glfw3.h> //biblioteka do tworzenia okna, zczytuje ruch myszy, klawisze itd 
 
+#include "Shader.hpp"
+
 const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
 static void glfw_error_callback(int error, const char* description)
@@ -25,7 +25,7 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void drawMengerCube(GLuint shaderProgram, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration = 0);
+void drawMengerCube(Shader& shader, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration = 0);
 
 int main() 
 {
@@ -173,67 +173,9 @@ int main()
 
     glBindVertexArray(0);
 
-    // ----- VERTEX SHADER -----
-
-    // £adujemy shader z pliku
-    std::ifstream shaderFile("res/shaders/basic.vert");
-    std::stringstream buffer;
-    buffer << shaderFile.rdbuf();
-
-    std::string vertexShaderSource = buffer.str();
-    const char* vertShader = vertexShaderSource.c_str();
-
-    GLuint vertexShader;
-    vertexShader = glCreateShader(GL_VERTEX_SHADER);
-
-    glShaderSource(vertexShader, 1, &vertShader, NULL); 
-    glCompileShader(vertexShader); 
-
-    // Sprawdzanie b³êdów kompilacji vertex shadera
-    int  success;
-    char infoLog[512];
-    glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(vertexShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::VERTEX::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    // ----- FRAGMENT SHADER -----
-
-    std::ifstream shaderFile2("res/shaders/basic.frag");
-    std::stringstream buffer2;
-    buffer2 << shaderFile2.rdbuf();
-
-    std::string fragmentShaderSource = buffer2.str();
-    const char* fragShader = fragmentShaderSource.c_str();
-
-    GLuint fragmentShader;
-    fragmentShader = glCreateShader(GL_FRAGMENT_SHADER);
-
-    glShaderSource(fragmentShader, 1, &fragShader, NULL);
-    glCompileShader(fragmentShader);
-
-    // Sprawdzanie b³êdów kompilacji fragment shadera
-    glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
-    if (!success)
-    {
-        glGetShaderInfoLog(fragmentShader, 512, NULL, infoLog);
-        std::cout << "ERROR::SHADER::FRAGMENT::COMPILATION_FAILED\n" << infoLog << std::endl;
-    }
-
-    //SHADER PROGRAM 
-
-    GLuint shaderProgram;
-    shaderProgram = glCreateProgram();
-
-    glAttachShader(shaderProgram, vertexShader);
-    glAttachShader(shaderProgram, fragmentShader);
-    glLinkProgram(shaderProgram);
-
-    glDeleteShader(vertexShader);
-    glDeleteShader(fragmentShader);
-
+    // Shader
+    Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
+    
     // Zmienne pomocnicze paremetryzuj¹ce rendering
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -317,12 +259,10 @@ int main()
         glBindTexture(GL_TEXTURE_2D, texture);
         glBindVertexArray(VAO);
 
-        glUseProgram(shaderProgram);
+        basicShader.use();
+        basicShader.setVec4("color", glm::vec4(color.x, color.y, color.z, color.w));
 
-        int colorLocation = glGetUniformLocation(shaderProgram, "color");
-        glUniform4f(colorLocation, color.x, color.y, color.z, color.w);
-
-        drawMengerCube(shaderProgram, iterations, modelMatrix, cubePositions, 20);
+        drawMengerCube(basicShader, iterations, modelMatrix, cubePositions, 20);
 
         glBindVertexArray(0);
 
@@ -345,12 +285,11 @@ int main()
     return 0;
 }
 
-void drawMengerCube(GLuint shaderProgram, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration)
+void drawMengerCube(Shader& shader, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration)
 {
     if (currentIteration == maxIterations)
     {
-        int modelLocation = glGetUniformLocation(shaderProgram, "model"); 
-        glUniformMatrix4fv(modelLocation, 1, GL_FALSE, glm::value_ptr(model)); 
+        shader.setMat4("model", model);
         glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
     }
     else
@@ -361,7 +300,7 @@ void drawMengerCube(GLuint shaderProgram, int maxIterations, glm::mat4& model, g
             tempModel = glm::scale(tempModel, glm::vec3(1.0f / 3.0f));
             tempModel = glm::translate(tempModel, cubePositions[i]);
             tempModel = model * tempModel;
-            drawMengerCube(shaderProgram, maxIterations, tempModel, cubePositions, cubePositionsCount, currentIteration + 1);
+            drawMengerCube(shader, maxIterations, tempModel, cubePositions, cubePositionsCount, currentIteration + 1);
         }
     }
 }
