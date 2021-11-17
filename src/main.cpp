@@ -17,6 +17,7 @@
 #include <GLFW/glfw3.h> //biblioteka do tworzenia okna, zczytuje ruch myszy, klawisze itd 
 
 #include "Shader.hpp"
+#include "Model.hpp"
 
 const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
 
@@ -24,8 +25,6 @@ static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
-
-void drawMengerCube(Shader& shader, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration = 0);
 
 int main() 
 {
@@ -72,54 +71,6 @@ int main()
     // Setup style
     ImGui::StyleColorsDark();
 
-
-    float vertices[] = { 
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, //front
-         0.5f, -0.5f,  0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,    0.0f, 1.0f,
-
-         0.5f, -0.5f, -0.5f,    0.0f, 0.0f, //back
-        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-        -0.5f,  0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, //top
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-         0.5f,  0.5f,  0.5f,    1.0f, 1.0f,
-         0.5f,  0.5f, -0.5f,    0.0f, 1.0f,
-
-        -0.5f, -0.5f,  0.5f,    0.0f, 0.0f, //bottom
-        -0.5f, -0.5f, -0.5f,    1.0f, 0.0f,
-         0.5f, -0.5f, -0.5f,    1.0f, 1.0f,
-         0.5f, -0.5f,  0.5f,    0.0f, 1.0f,
-
-        -0.5f,  0.5f, -0.5f,    0.0f, 0.0f, //left
-        -0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-        -0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
-        -0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
-
-         0.5f,  0.5f, -0.5f,    0.0f, 0.0f, //right
-         0.5f,  0.5f,  0.5f,    1.0f, 0.0f,
-         0.5f, -0.5f,  0.5f,    1.0f, 1.0f,
-         0.5f, -0.5f, -0.5f,    0.0f, 1.0f,
-    };
-
-    unsigned int indices[] = {  
-        0,1,3, 
-        1,2,3, 
-        4,5,7, 
-        5,6,7,
-        8,9,11,
-        9,10,11,
-        12,13,15,
-        13,14,15,
-        16,17,19,
-        17,18,19,
-        20,21,23,
-        21,22,23
-    };
-
     // Wczytywanie tekstury z pliku za pomoc¹ biblioteki stb_image
     int width, height, nrChannels;
     unsigned char* data = stbi_load("res/textures/Opalka.jpg", &width, &height, &nrChannels, 0);
@@ -143,38 +94,13 @@ int main()
     glGenerateMipmap(GL_TEXTURE_2D);
 
     // Usuwamy teksturê z ramu
-    stbi_image_free(data);
-
-    GLuint VAO;
-    glGenVertexArrays(1, &VAO);
-
-    glBindVertexArray(VAO);
-
-    GLuint EBO;
-    glGenBuffers(1, &EBO);
-
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    GLuint VBO; // Vertex buffer object ID variable, Przechowuje wszystkie dane geometrii
-    glGenBuffers(1, &VBO); //funkcja tworz¹ca bufor na karcie graficznej i zapisuj¹ca jego ID w zmiennej VBO
-
-    glBindBuffer(GL_ARRAY_BUFFER, VBO);
-
-    //przekazujemy dane do wczesniej stworzonego bufora
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW); 
-                        
-    // Ustawienie wskaŸnika atrybutu
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0); // aktywowanie attribute pointera o indexie 0
-
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
-    glEnableVertexAttribArray(1);
-
-    glBindVertexArray(0);
+    stbi_image_free(data); 
 
     // Shader
     Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
+
+    // Model
+    Model testModel("res/models/nanosuit/nanosuit.obj");
     
     // Zmienne pomocnicze paremetryzuj¹ce rendering
     bool wireframe = false;
@@ -184,32 +110,6 @@ int main()
     float rotationX = 0.0f;
     float rotationY = 0.0f;
     int iterations = 1;
-    // Przechowuje pozycje szeœcianów dla renderowania kostki mengera
-    glm::vec3 cubePositions[] = {
-        // bottom
-        glm::vec3(1.0f, -1.0f, 0.0f),
-        glm::vec3(1.0f, -1.0f, 1.0f),
-        glm::vec3(0.0f, -1.0f, 1.0f),
-        glm::vec3(-1.0f, -1.0f, 1.0f),
-        glm::vec3(-1.0f, -1.0f, 0.0f),
-        glm::vec3(-1.0f, -1.0f, -1.0f),
-        glm::vec3(0.0f, -1.0f, -1.0f),
-        glm::vec3(1.0f, -1.0f, -1.0f),
-        // mid
-        glm::vec3(1.0f, 0.0f, 1.0f),
-        glm::vec3(-1.0f, 0.0f, 1.0f),
-        glm::vec3(-1.0f, 0.0f, -1.0f),
-        glm::vec3(1.0f, 0.0f, -1.0f),
-        // top
-        glm::vec3(1.0f, 1.0f, 0.0f),
-        glm::vec3(1.0f, 1.0f, 1.0f),
-        glm::vec3(0.0f, 1.0f, 1.0f),
-        glm::vec3(-1.0f, 1.0f, 1.0f),
-        glm::vec3(-1.0f, 1.0f, 0.0f),
-        glm::vec3(-1.0f, 1.0f, -1.0f),
-        glm::vec3(0.0f, 1.0f, -1.0f),
-        glm::vec3(1.0f, 1.0f, -1.0f),
-    };
 
     // ============================================ Main loop =======================================================================
 
@@ -257,12 +157,10 @@ int main()
 
 
         glBindTexture(GL_TEXTURE_2D, texture);
-        glBindVertexArray(VAO);
 
-        basicShader.use();
         basicShader.setVec4("color", glm::vec4(color.x, color.y, color.z, color.w));
 
-        drawMengerCube(basicShader, iterations, modelMatrix, cubePositions, 20);
+        testModel.draw(basicShader);
 
         glBindVertexArray(0);
 
@@ -283,24 +181,4 @@ int main()
     glfwTerminate();
 
     return 0;
-}
-
-void drawMengerCube(Shader& shader, int maxIterations, glm::mat4& model, glm::vec3 cubePositions[], int cubePositionsCount, int currentIteration)
-{
-    if (currentIteration == maxIterations)
-    {
-        shader.setMat4("model", model);
-        glDrawElements(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0);
-    }
-    else
-    {
-        for (int i = 0; i < cubePositionsCount; i++)
-        {
-            glm::mat4 tempModel = glm::mat4(1.0f);
-            tempModel = glm::scale(tempModel, glm::vec3(1.0f / 3.0f));
-            tempModel = glm::translate(tempModel, cubePositions[i]);
-            tempModel = model * tempModel;
-            drawMengerCube(shader, maxIterations, tempModel, cubePositions, cubePositionsCount, currentIteration + 1);
-        }
-    }
 }
