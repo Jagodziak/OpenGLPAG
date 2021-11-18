@@ -9,6 +9,7 @@ Model::Model(std::string modelPath)
 
 void Model::draw(Shader& shader)
 {
+	shader.setMat4("model", modelTransform.getWorldTransform());
 	// For each mesh in meshes
 	for (auto mesh : meshes)
 	{

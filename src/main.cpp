@@ -5,9 +5,6 @@
 #include "imgui_impl_opengl3.h" // biblioteka do renderowania prostych interfejsów graficznych
 #include <stdio.h>
 
-#define STB_IMAGE_IMPLEMENTATION 
-#include "stb_image.h"
-
 #include <glm/glm.hpp> 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -71,36 +68,15 @@ int main()
     // Setup style
     ImGui::StyleColorsDark();
 
-    // Wczytywanie tekstury z pliku za pomoc¹ biblioteki stb_image
-    int width, height, nrChannels;
-    unsigned char* data = stbi_load("res/textures/Opalka.jpg", &width, &height, &nrChannels, 0);
-
-    // Przekazujemy teksturê do karty graficznej
-    GLuint texture; 
-    glGenTextures(1, &texture);
-
-    glBindTexture(GL_TEXTURE_2D, texture);
-
-    // Ustawienie filtrowania
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    // Ustawienie powtarzania
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-
-    //przekazujemy dane do gpu
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    // Usuwamy teksturê z ramu
-    stbi_image_free(data); 
-
     // Shader
     Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
 
     // Model
     Model testModel("res/models/nanosuit/nanosuit.obj");
+    Model mars("res/models/Mars/Mars 2K.fbx");
+
+    testModel.modelTransform.addChild(&mars.modelTransform);
+    mars.modelTransform.move(glm::vec3(15.0f, 0.0f, 0.0f));
     
     // Zmienne pomocnicze paremetryzuj¹ce rendering
     bool wireframe = false;
@@ -132,7 +108,7 @@ int main()
             ImGui::SliderFloat("Rotation Y", &rotationY, 0.0f, 360.0f);
             ImGui::SliderFloat("Model scale", &modelScale, 0.01f, 2.0f);
             ImGui::SliderInt("Iterations", &iterations, 0, 5);
-            ImGui::SliderFloat3("Camera Pos", cameraPosition, -10.0f, 10.0f);
+            ImGui::SliderFloat3("Camera Pos", cameraPosition, -50.0f, 50.0f);
             ImGui::ColorEdit3("texture color", (float*)&color);
             ImGui::ColorEdit3("clear color", (float*)&clear_color); 
 
@@ -154,27 +130,24 @@ int main()
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        // Przygotowanie macierzy
-        modelMatrix = glm::mat4(1.0f);
-        modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale, modelScale, modelScale));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationX), glm::vec3(1.0f, 0.0f, 0.0f));
-        modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
+        testModel.modelTransform.reset();
+        testModel.modelTransform.rotate(glm::vec3(rotationX, rotationY, 0.0f));
+        testModel.modelTransform.scale(glm::vec3(modelScale, modelScale, modelScale));
 
+        // Przygotowanie macierzy
         viewMatrix = glm::mat4(1.0f);
         viewMatrix = glm::translate(viewMatrix, glm::vec3(cameraPosition[0], cameraPosition[1], cameraPosition[2]));
-        //viewMatrix = glm::inverse(viewMatrix);
+        viewMatrix = glm::inverse(viewMatrix);
 
         projectionMatrix = glm::mat4(1.0f);
         projectionMatrix = glm::perspective(glm::radians(60.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.01f, 1000.0f);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
-
         basicShader.setVec4("color", glm::vec4(color.x, color.y, color.z, color.w));
-        basicShader.setMat4("model", modelMatrix);
         basicShader.setMat4("view", viewMatrix);
         basicShader.setMat4("projection", projectionMatrix);
 
         testModel.draw(basicShader);
+        mars.draw(basicShader);
 
         glBindVertexArray(0);
 

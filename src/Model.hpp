@@ -10,6 +10,7 @@
 #include <assimp/postprocess.h>
 
 #include "Mesh.hpp"
+#include <Transform.hpp>
 
 class Model
 {
@@ -17,9 +18,9 @@ public:
 	Model(std::string modelPath);
 
 	void draw(Shader& shader);
+	Transform modelTransform;
 
 private:
-	glm::mat4 modelMatrix; // Transforms our model from local to world space
 	std::vector<Mesh> meshes; // Collection for storing meshes
 
 	std::string directory; // From which (relative) directory the model is sourced
