@@ -19,7 +19,7 @@
 #include "Shader.hpp"
 #include "Model.hpp"
 
-const int WINDOW_WIDTH = 800, WINDOW_HEIGHT = 800;
+const int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080;
 
 static void glfw_error_callback(int error, const char* description)
 {
@@ -106,9 +106,11 @@ int main()
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImVec4 color = ImVec4(1.0f, 1.0f, 1.00f, 1.00f);
-    glm::mat4 modelMatrix = glm::mat4(1.0f);
+    float cameraPosition[3] = { 0.0f, 0.0f, 5.0f };
+    glm::mat4 modelMatrix, viewMatrix, projectionMatrix;
     float rotationX = 0.0f;
     float rotationY = 0.0f;
+    float modelScale = 1.0f;
     int iterations = 1;
 
     // ============================================ Main loop =======================================================================
@@ -128,7 +130,9 @@ int main()
 
             ImGui::SliderFloat("Rotation X", &rotationX, 0.0f, 360.0f);
             ImGui::SliderFloat("Rotation Y", &rotationY, 0.0f, 360.0f);
+            ImGui::SliderFloat("Model scale", &modelScale, 0.01f, 2.0f);
             ImGui::SliderInt("Iterations", &iterations, 0, 5);
+            ImGui::SliderFloat3("Camera Pos", cameraPosition, -10.0f, 10.0f);
             ImGui::ColorEdit3("texture color", (float*)&color);
             ImGui::ColorEdit3("clear color", (float*)&clear_color); 
 
@@ -152,13 +156,23 @@ int main()
 
         // Przygotowanie macierzy
         modelMatrix = glm::mat4(1.0f);
+        modelMatrix = glm::scale(modelMatrix, glm::vec3(modelScale, modelScale, modelScale));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationX), glm::vec3(1.0f, 0.0f, 0.0f));
         modelMatrix = glm::rotate(modelMatrix, glm::radians(rotationY), glm::vec3(0.0f, 1.0f, 0.0f));
 
+        viewMatrix = glm::mat4(1.0f);
+        viewMatrix = glm::translate(viewMatrix, glm::vec3(cameraPosition[0], cameraPosition[1], cameraPosition[2]));
+        //viewMatrix = glm::inverse(viewMatrix);
+
+        projectionMatrix = glm::mat4(1.0f);
+        projectionMatrix = glm::perspective(glm::radians(60.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.01f, 1000.0f);
 
         glBindTexture(GL_TEXTURE_2D, texture);
 
         basicShader.setVec4("color", glm::vec4(color.x, color.y, color.z, color.w));
+        basicShader.setMat4("model", modelMatrix);
+        basicShader.setMat4("view", viewMatrix);
+        basicShader.setMat4("projection", projectionMatrix);
 
         testModel.draw(basicShader);
 

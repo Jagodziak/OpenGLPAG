@@ -7,11 +7,13 @@ layout(location = 2) in vec2 aTexcoord;
 out vec2 Texcoord;
 
 uniform mat4 model; // Zmienna któr¹ mo¿na przekazaæ do shadera z CPU
+uniform mat4 view;
+uniform mat4 projection;
 
 void main()
 {
     Texcoord = aTexcoord;
     // gl_Position - zmienna do której MUSISZ wpisaæ pozycje vertexa. Za pomoc¹ tej zmiennej s¹ przekazywane dane do fragment shadera (rysunek)
-    gl_Position = model * vec4(aPos.x, aPos.y, aPos.z, 1.0); // Jak jest 1.0 to mamy pozycjê (punkt), jak 0.0 to mamy wektor
+    gl_Position = projection * view * model * vec4(aPos.x, aPos.y, aPos.z, 1.0); // Jak jest 1.0 to mamy pozycjê (punkt), jak 0.0 to mamy wektor
 }
 // koniec
