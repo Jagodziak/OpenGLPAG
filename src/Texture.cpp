@@ -3,7 +3,12 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include <stb_image.h>
 
-Texture::Texture(std::string& texturePath)
+Texture::Texture()
+{
+    textureID = 0;
+}
+
+void Texture::load(std::string texturePath)
 {
     // Wczytywanie tekstury z pliku za pomoc¹ biblioteki stb_image
     int width, height, nrChannels;

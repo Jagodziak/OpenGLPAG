@@ -11,6 +11,7 @@
 
 #include "Mesh.hpp"
 #include <Transform.hpp>
+#include <Texture.hpp>
 
 class Model
 {
@@ -18,11 +19,12 @@ public:
 	Model(std::string modelPath);
 
 	void draw(Shader& shader);
+
 	Transform modelTransform;
+	Texture texture;
 
 private:
 	std::vector<Mesh> meshes; // Collection for storing meshes
-
 	std::string directory; // From which (relative) directory the model is sourced
 
 	void loadModel(std::string modelPath);

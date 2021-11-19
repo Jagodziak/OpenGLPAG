@@ -5,7 +5,9 @@
 class Texture
 {
 public:
-	Texture(std::string& texturePath);
+	Texture();
+
+	void load(std::string texturePath);
 
 	GLuint getTextureId();
 

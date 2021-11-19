@@ -21,6 +21,11 @@ void Transform::addChild(Transform* child)
 
 void Transform::recalculate(glm::mat4 parentTransform)
 {
+	if (rotationSpeed > 0.0001f || rotationSpeed < -0.0001f)
+	{
+		localTransform = glm::rotate(localTransform, rotationSpeed, glm::vec3(0.0f, 1.0f, 0.0f));
+	}
+
 	worldTransform = parentTransform * localTransform;
 	for (int i = 0; i < children.size(); i++)
 	{

@@ -10,6 +10,12 @@ Model::Model(std::string modelPath)
 void Model::draw(Shader& shader)
 {
 	shader.setMat4("model", modelTransform.getWorldTransform());
+
+	glActiveTexture(GL_TEXTURE0); // Activate texture unit 0
+	glBindTexture(GL_TEXTURE_2D, texture.getTextureId());
+
+	shader.setInt("ourTexture", 0); // Bind texture unit 0 to ourTexture
+
 	// For each mesh in meshes
 	for (auto mesh : meshes)
 	{
@@ -21,7 +27,7 @@ void Model::loadModel(std::string modelPath)
 {
 	Assimp::Importer importer;
 	// Loading model using Assimp library
-	const aiScene* scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_FlipUVs);
+	const aiScene* scene = importer.ReadFile(modelPath, aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_GenNormals);
 
 	// Cheking for file loading errors
 	if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode)

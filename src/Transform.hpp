@@ -18,6 +18,8 @@ public:
 
 	glm::mat4 getWorldTransform();
 
+	float rotationSpeed = 0.0f;
+
 private:
 	std::vector<Transform*> children;
 
