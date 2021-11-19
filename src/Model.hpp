@@ -16,7 +16,7 @@
 class Model
 {
 public:
-	Model(std::string modelPath);
+	Model(std::string modelPath, bool drawAsLine = false);
 
 	void draw(Shader& shader);
 
@@ -26,6 +26,7 @@ public:
 private:
 	std::vector<Mesh> meshes; // Collection for storing meshes
 	std::string directory; // From which (relative) directory the model is sourced
+	bool drawAsLine;
 
 	void loadModel(std::string modelPath);
 	void processNode(aiNode* node, const aiScene* scene);

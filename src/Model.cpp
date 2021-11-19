@@ -2,8 +2,9 @@
 
 #include <iostream>
 
-Model::Model(std::string modelPath)
+Model::Model(std::string modelPath, bool drawAsLine)
 {
+	this->drawAsLine = drawAsLine;
 	loadModel(modelPath);
 }
 
@@ -19,7 +20,7 @@ void Model::draw(Shader& shader)
 	// For each mesh in meshes
 	for (auto mesh : meshes)
 	{
-		mesh.draw(shader);
+		mesh.draw(shader, drawAsLine);
 	}
 }
 

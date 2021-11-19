@@ -35,10 +35,17 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
     glBindVertexArray(0);
 }
 
-void Mesh::draw(Shader& shader)
+void Mesh::draw(Shader& shader, bool drawAsLine)
 {
     shader.use();
     glBindVertexArray(VAO);
-    glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    if (drawAsLine)
+    {
+        glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
+    }
+    else
+    {
+        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+    }
     glBindVertexArray(0);
 }

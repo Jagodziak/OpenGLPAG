@@ -79,6 +79,8 @@ int main()
     skybox.texture.load("res/textures/stars_milky_way.jpg");
 
     Transform sceneRoot;
+    // For the solar system to be the right way up
+    sceneRoot.rotate(glm::vec3(glm::radians(180.0f), 0.0f, 0.0f));
 
     Model sun("res/models/planet.fbx");
     sceneObjects.push_back(&sun);
@@ -99,7 +101,7 @@ int main()
     mercuryAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
     sceneRoot.addChild(&mercuryAngle);
 
-    Model mercuryOrbit("res/models/orbit.fbx");
+    Model mercuryOrbit("res/models/orbit.fbx", true);
     sceneObjects.push_back(&mercuryOrbit);
     mercuryOrbit.texture.load("res/textures/white.jpg");
     mercuryOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
@@ -129,7 +131,7 @@ int main()
     venusAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
     sceneRoot.addChild(&venusAngle);
 
-    Model venusOrbit("res/models/orbit.fbx");
+    Model venusOrbit("res/models/orbit.fbx", true);
     sceneObjects.push_back(&venusOrbit);
     venusOrbit.texture.load("res/textures/white.jpg");
     venusOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
@@ -147,7 +149,235 @@ int main()
     venus.modelTransform.rotationSpeed = planetSpeed;
     venusPivot.addChild(&venus.modelTransform);
     // ===============================================================
+
+    // ===== PLANET =================================================
+    orbitRadius = 80.0f;
+    orbitAngle = 10.0f;
+    orbitSpeed = 0.0005f;
+    planetRadius = 0.35f;
+    planetSpeed = -0.01f;
+
+    Transform earthAngle;
+    earthAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    sceneRoot.addChild(&earthAngle);
+
+    Model earthOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&earthOrbit);
+    earthOrbit.texture.load("res/textures/white.jpg");
+    earthOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    earthAngle.addChild(&earthOrbit.modelTransform);
+
+    Transform earthPivot;
+    earthPivot.rotationSpeed = orbitSpeed;
+    earthAngle.addChild(&earthPivot);
+
+    Transform earthCenter;
+    earthCenter.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    earthPivot.addChild(&earthCenter);
+
+    Model earth("res/models/planet.fbx");
+    sceneObjects.push_back(&earth);
+    earth.texture.load("res/textures/earth.jpg");
+    earth.modelTransform.scale(glm::vec3(planetRadius));
+    earth.modelTransform.rotationSpeed = planetSpeed;
+    earthCenter.addChild(&earth.modelTransform);
+    // ===============================================================
+
+    // ===== MOON =================================================
+    orbitRadius = 10.0f;
+    orbitAngle = 0.0f;
+    orbitSpeed = 0.0005f;
+    planetRadius = 0.05f;
+    planetSpeed = 0.01f;
+
+    Transform moonAngle;
+    moonAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    earthCenter.addChild(&moonAngle);
+
+    Model moonOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&moonOrbit);
+    moonOrbit.texture.load("res/textures/white.jpg");
+    moonOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    moonAngle.addChild(&moonOrbit.modelTransform);
+
+    Transform moonPivot;
+    moonPivot.rotationSpeed = orbitSpeed;
+    moonAngle.addChild(&moonPivot);
+
+    Model moon("res/models/planet.fbx");
+    sceneObjects.push_back(&moon);
+    moon.texture.load("res/textures/moon.jpg");
+    moon.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    moon.modelTransform.scale(glm::vec3(planetRadius));
+    moon.modelTransform.rotationSpeed = planetSpeed;
+    moonPivot.addChild(&moon.modelTransform);
+    // ===============================================================
     
+    // ===== PLANET =================================================
+    orbitRadius = 100.0f;
+    orbitAngle = 0.0f;
+    orbitSpeed = 0.0005f;
+    planetRadius = 0.25f;
+    planetSpeed = 0.02f;
+
+    Transform marsAngle;
+    marsAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    sceneRoot.addChild(&marsAngle);
+
+    Model marsOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&marsOrbit);
+    marsOrbit.texture.load("res/textures/white.jpg");
+    marsOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    marsAngle.addChild(&marsOrbit.modelTransform);
+
+    Transform marsPivot;
+    marsPivot.rotationSpeed = orbitSpeed;
+    marsAngle.addChild(&marsPivot);
+
+    Transform marsCenter;
+    marsCenter.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    marsPivot.addChild(&marsCenter);
+
+    Model mars("res/models/planet.fbx");
+    sceneObjects.push_back(&mars);
+    mars.texture.load("res/textures/mars.jpg");
+    mars.modelTransform.scale(glm::vec3(planetRadius));
+    mars.modelTransform.rotationSpeed = planetSpeed;
+    marsCenter.addChild(&mars.modelTransform);
+    // ===============================================================
+
+    // ===== PLANET =================================================
+    orbitRadius = 150.0f;
+    orbitAngle = 0.0f;
+    orbitSpeed = 0.0004f;
+    planetRadius = 1.0f;
+    planetSpeed = 0.02f;
+
+    Transform jupiterAngle;
+    jupiterAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    sceneRoot.addChild(&jupiterAngle);
+
+    Model jupiterOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&jupiterOrbit);
+    jupiterOrbit.texture.load("res/textures/white.jpg");
+    jupiterOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    jupiterAngle.addChild(&jupiterOrbit.modelTransform);
+
+    Transform jupiterPivot;
+    jupiterPivot.rotationSpeed = orbitSpeed;
+    jupiterAngle.addChild(&jupiterPivot);
+
+    Transform jupiterCenter;
+    jupiterCenter.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    jupiterPivot.addChild(&jupiterCenter);
+
+    Model jupiter("res/models/planet.fbx");
+    sceneObjects.push_back(&jupiter);
+    jupiter.texture.load("res/textures/jupiter.jpg");
+    jupiter.modelTransform.scale(glm::vec3(planetRadius));
+    jupiter.modelTransform.rotationSpeed = planetSpeed;
+    jupiterCenter.addChild(&jupiter.modelTransform);
+    // ===============================================================
+
+    // ===== PLANET =================================================
+    orbitRadius = 200.0f;
+    orbitAngle = 0.0f;
+    orbitSpeed = 0.0003f;
+    planetRadius = 0.7f;
+    planetSpeed = 0.02f;
+
+    Transform saturnAngle;
+    saturnAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    sceneRoot.addChild(&saturnAngle);
+
+    Model saturnOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&saturnOrbit);
+    saturnOrbit.texture.load("res/textures/white.jpg");
+    saturnOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    saturnAngle.addChild(&saturnOrbit.modelTransform);
+
+    Transform saturnPivot;
+    saturnPivot.rotationSpeed = orbitSpeed;
+    saturnAngle.addChild(&saturnPivot);
+
+    Transform saturnCenter;
+    saturnCenter.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    saturnPivot.addChild(&saturnCenter);
+
+    Model saturn("res/models/planet.fbx");
+    sceneObjects.push_back(&saturn);
+    saturn.texture.load("res/textures/saturn.jpg");
+    saturn.modelTransform.scale(glm::vec3(planetRadius));
+    saturn.modelTransform.rotationSpeed = planetSpeed;
+    saturnCenter.addChild(&saturn.modelTransform);
+    // ===============================================================
+
+    // ===== PLANET =================================================
+    orbitRadius = 290.0f;
+    orbitAngle = 3.0f;
+    orbitSpeed = 0.0007f;
+    planetRadius = 0.6f;
+    planetSpeed = 0.04f;
+
+    Transform uranusAngle;
+    uranusAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    sceneRoot.addChild(&uranusAngle);
+
+    Model uranusOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&uranusOrbit);
+    uranusOrbit.texture.load("res/textures/white.jpg");
+    uranusOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    uranusAngle.addChild(&uranusOrbit.modelTransform);
+
+    Transform uranusPivot;
+    uranusPivot.rotationSpeed = orbitSpeed;
+    uranusAngle.addChild(&uranusPivot);
+
+    Transform uranusCenter;
+    uranusCenter.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    uranusPivot.addChild(&uranusCenter);
+
+    Model uranus("res/models/planet.fbx");
+    sceneObjects.push_back(&uranus);
+    uranus.texture.load("res/textures/uranus.jpg");
+    uranus.modelTransform.scale(glm::vec3(planetRadius));
+    uranus.modelTransform.rotationSpeed = planetSpeed;
+    uranusCenter.addChild(&uranus.modelTransform);
+    // ===============================================================
+
+    // ===== PLANET =================================================
+    orbitRadius = 350.0f;
+    orbitAngle = 5.0f;
+    orbitSpeed = 0.0002f;
+    planetRadius = 0.55f;
+    planetSpeed = 0.08f;
+
+    Transform neptuneAngle;
+    neptuneAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    sceneRoot.addChild(&neptuneAngle);
+
+    Model neptuneOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&neptuneOrbit);
+    neptuneOrbit.texture.load("res/textures/white.jpg");
+    neptuneOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    neptuneAngle.addChild(&neptuneOrbit.modelTransform);
+
+    Transform neptunePivot;
+    neptunePivot.rotationSpeed = orbitSpeed;
+    neptuneAngle.addChild(&neptunePivot);
+
+    Transform neptuneCenter;
+    neptuneCenter.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    neptunePivot.addChild(&neptuneCenter);
+
+    Model neptune("res/models/planet.fbx");
+    sceneObjects.push_back(&neptune);
+    neptune.texture.load("res/textures/neptune.jpg");
+    neptune.modelTransform.scale(glm::vec3(planetRadius));
+    neptune.modelTransform.rotationSpeed = planetSpeed;
+    neptuneCenter.addChild(&neptune.modelTransform);
+    // ===============================================================
+
     // Zmienne pomocnicze paremetryzuj¹ce rendering
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
