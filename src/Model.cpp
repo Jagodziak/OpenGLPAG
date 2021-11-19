@@ -8,6 +8,55 @@ Model::Model(std::string modelPath, bool drawAsLine)
 	loadModel(modelPath);
 }
 
+Model::Model()
+{
+	drawAsLine = false;
+	meshes.push_back(Mesh());
+}
+
+void Model::generateCone(float coneRadius, float coneHeight, int coneSides)
+{
+	std::vector<Vertex> coneVertices;
+	std::vector<unsigned int> coneIndices;
+
+	Vertex tempVert;
+	tempVert.pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	tempVert.norm = glm::vec3(0.0f, 0.0f, 0.0f);
+	tempVert.texcoord = glm::vec2(0.0f, 0.0f);
+
+	// The bottom center 0.0f 0.0f 0.0f vertex
+	coneVertices.push_back(tempVert);
+
+	// The top vertex
+	tempVert.pos = glm::vec3(0.0f, coneHeight, 0.0f);
+	coneVertices.push_back(tempVert);
+
+	// The bottom circle vertices
+	float incrementAngle = glm::radians(360.0f / coneSides);
+	for (int i = 0; i <= coneSides; i++)
+	{
+		float x = coneRadius * glm::cos(incrementAngle * i);
+		float z = coneRadius * glm::sin(incrementAngle * i);
+		tempVert.pos = glm::vec3(x, 0.0f, z);
+		coneVertices.push_back(tempVert);
+	}
+
+	// Mesh indices
+	for (int i = 0; i <= coneSides; i++)
+	{
+		// Bottom triangle
+		coneIndices.push_back(0);
+		coneIndices.push_back(i + 3);
+		coneIndices.push_back(i + 2);
+		// Side triangle
+		coneIndices.push_back(1);
+		coneIndices.push_back(i + 2);
+		coneIndices.push_back(i + 3);
+	}
+
+	meshes[0] = Mesh(coneVertices, coneIndices);
+}
+
 void Model::draw(Shader& shader)
 {
 	shader.setMat4("model", modelTransform.getWorldTransform());

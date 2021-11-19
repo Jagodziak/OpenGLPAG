@@ -141,13 +141,46 @@ int main()
     venusPivot.rotationSpeed = orbitSpeed;
     venusAngle.addChild(&venusPivot);
 
+    Transform venusCenter;
+    venusCenter.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    venusPivot.addChild(&venusCenter);
+
     Model venus("res/models/planet.fbx");
     sceneObjects.push_back(&venus);
     venus.texture.load("res/textures/venus.jpg");
-    venus.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
     venus.modelTransform.scale(glm::vec3(planetRadius));
     venus.modelTransform.rotationSpeed = planetSpeed;
-    venusPivot.addChild(&venus.modelTransform);
+    venusCenter.addChild(&venus.modelTransform);
+    // ===============================================================
+
+    // ===== MOON =================================================
+    orbitRadius = 6.0f;
+    orbitAngle = 10.0f;
+    orbitSpeed = 0.005f;
+    planetRadius = 0.1f;
+    planetSpeed = 0.01f;
+
+    Transform forknifeAngle;
+    forknifeAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    venusCenter.addChild(&forknifeAngle);
+
+    Model forknifeOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&forknifeOrbit);
+    forknifeOrbit.texture.load("res/textures/white.jpg");
+    forknifeOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    forknifeAngle.addChild(&forknifeOrbit.modelTransform);
+
+    Transform forknifePivot;
+    forknifePivot.rotationSpeed = orbitSpeed;
+    forknifeAngle.addChild(&forknifePivot);
+
+    Model forknife("res/models/planet.fbx");
+    sceneObjects.push_back(&forknife);
+    forknife.texture.load("res/textures/forknife.jpg");
+    forknife.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    forknife.modelTransform.scale(glm::vec3(planetRadius));
+    forknife.modelTransform.rotationSpeed = planetSpeed;
+    forknifePivot.addChild(&forknife.modelTransform);
     // ===============================================================
 
     // ===== PLANET =================================================
@@ -279,6 +312,66 @@ int main()
     jupiterCenter.addChild(&jupiter.modelTransform);
     // ===============================================================
 
+    // ===== MOON =================================================
+    orbitRadius = 20.0f;
+    orbitAngle = 65.0f;
+    orbitSpeed = 0.0005f;
+    planetRadius = 0.15f;
+    planetSpeed = 0.01f;
+
+    Transform ceresAngle;
+    ceresAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    jupiterCenter.addChild(&ceresAngle);
+
+    Model ceresOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&ceresOrbit);
+    ceresOrbit.texture.load("res/textures/white.jpg");
+    ceresOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    ceresAngle.addChild(&ceresOrbit.modelTransform);
+
+    Transform ceresPivot;
+    ceresPivot.rotationSpeed = orbitSpeed;
+    ceresAngle.addChild(&ceresPivot);
+
+    Model ceres("res/models/planet.fbx");
+    sceneObjects.push_back(&ceres);
+    ceres.texture.load("res/textures/ceres.jpg");
+    ceres.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    ceres.modelTransform.scale(glm::vec3(planetRadius));
+    ceres.modelTransform.rotationSpeed = planetSpeed;
+    ceresPivot.addChild(&ceres.modelTransform);
+    // ===============================================================
+
+    // ===== MOON =================================================
+    orbitRadius = 25.0f;
+    orbitAngle = 130.0f;
+    orbitSpeed = -0.05f;
+    planetRadius = 0.2f;
+    planetSpeed = 0.01f;
+
+    Transform erisAngle;
+    erisAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    jupiterCenter.addChild(&erisAngle);
+
+    Model erisOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&erisOrbit);
+    erisOrbit.texture.load("res/textures/white.jpg");
+    erisOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    erisAngle.addChild(&erisOrbit.modelTransform);
+
+    Transform erisPivot;
+    erisPivot.rotationSpeed = orbitSpeed;
+    erisAngle.addChild(&erisPivot);
+
+    Model eris("res/models/planet.fbx");
+    sceneObjects.push_back(&eris);
+    eris.texture.load("res/textures/eris.jpg");
+    eris.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    eris.modelTransform.scale(glm::vec3(planetRadius));
+    eris.modelTransform.rotationSpeed = planetSpeed;
+    erisPivot.addChild(&eris.modelTransform);
+    // ===============================================================
+
     // ===== PLANET =================================================
     orbitRadius = 200.0f;
     orbitAngle = 0.0f;
@@ -310,6 +403,66 @@ int main()
     saturn.modelTransform.scale(glm::vec3(planetRadius));
     saturn.modelTransform.rotationSpeed = planetSpeed;
     saturnCenter.addChild(&saturn.modelTransform);
+    // ===============================================================
+
+    // ===== MOON =================================================
+    orbitRadius = 22.0f;
+    orbitAngle = 20.0f;
+    orbitSpeed = 0.005f;
+    planetRadius = 0.3f;
+    planetSpeed = 0.01f;
+
+    Transform amogusAngle;
+    amogusAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    saturnCenter.addChild(&amogusAngle);
+
+    Model amogusOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&amogusOrbit);
+    amogusOrbit.texture.load("res/textures/white.jpg");
+    amogusOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    amogusAngle.addChild(&amogusOrbit.modelTransform);
+
+    Transform amogusPivot;
+    amogusPivot.rotationSpeed = orbitSpeed;
+    amogusAngle.addChild(&amogusPivot);
+
+    Model amogus("res/models/planet.fbx");
+    sceneObjects.push_back(&amogus);
+    amogus.texture.load("res/textures/amogus.jpg");
+    amogus.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    amogus.modelTransform.scale(glm::vec3(planetRadius));
+    amogus.modelTransform.rotationSpeed = planetSpeed;
+    amogusPivot.addChild(&amogus.modelTransform);
+    // ===============================================================
+
+    // ===== MOON =================================================
+    orbitRadius = 28.0f;
+    orbitAngle = -30.0f;
+    orbitSpeed = 0.005f;
+    planetRadius = 0.35f;
+    planetSpeed = 0.01f;
+
+    Transform creeper_awwman_Angle;
+    creeper_awwman_Angle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    saturnCenter.addChild(&creeper_awwman_Angle);
+
+    Model creeper_awwman_Orbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&creeper_awwman_Orbit);
+    creeper_awwman_Orbit.texture.load("res/textures/white.jpg");
+    creeper_awwman_Orbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    creeper_awwman_Angle.addChild(&creeper_awwman_Orbit.modelTransform);
+
+    Transform creeper_awwman_Pivot;
+    creeper_awwman_Pivot.rotationSpeed = orbitSpeed;
+    creeper_awwman_Angle.addChild(&creeper_awwman_Pivot);
+
+    Model creeper_awwman_("res/models/planet.fbx");
+    sceneObjects.push_back(&creeper_awwman_);
+    creeper_awwman_.texture.load("res/textures/creeper_awwman.jpg");
+    creeper_awwman_.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    creeper_awwman_.modelTransform.scale(glm::vec3(planetRadius));
+    creeper_awwman_.modelTransform.rotationSpeed = planetSpeed;
+    creeper_awwman_Pivot.addChild(&creeper_awwman_.modelTransform);
     // ===============================================================
 
     // ===== PLANET =================================================
@@ -378,6 +531,37 @@ int main()
     neptuneCenter.addChild(&neptune.modelTransform);
     // ===============================================================
 
+    // ===== CONE =================================================
+    orbitRadius = 30.0f;
+    orbitAngle = 20.0f;
+    orbitSpeed = 0.005f;
+    planetRadius = 1.0f;
+    planetSpeed = 0.01f;
+
+    Transform coneAngle;
+    coneAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
+    saturnCenter.addChild(&coneAngle);
+
+    Model coneOrbit("res/models/orbit.fbx", true);
+    sceneObjects.push_back(&coneOrbit);
+    coneOrbit.texture.load("res/textures/white.jpg");
+    coneOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    coneAngle.addChild(&coneOrbit.modelTransform);
+
+    Transform conePivot;
+    conePivot.rotationSpeed = orbitSpeed;
+    coneAngle.addChild(&conePivot);
+
+    Model cone;
+    cone.generateCone(1.0f, 2.0f, 16);
+    sceneObjects.push_back(&cone);
+    cone.texture.load("res/textures/white.jpg");
+    cone.modelTransform.move(glm::vec3(orbitRadius, 0.0f, 0.0f));
+    cone.modelTransform.scale(glm::vec3(planetRadius));
+    cone.modelTransform.rotationSpeed = planetSpeed;
+    conePivot.addChild(&cone.modelTransform);
+    // ===============================================================
+
     // Zmienne pomocnicze paremetryzuj¹ce rendering
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
@@ -392,6 +576,8 @@ int main()
     float modelScale = 1.0f;
     int iterations = 1;
 
+    float coneWidth = 1.0f, coneHeight = 2.0f;
+    int coneSides = 16;
     // ============================================ Main loop =======================================================================
 
     while (!glfwWindowShouldClose(window))
@@ -416,6 +602,9 @@ int main()
             ImGui::ColorEdit3("texture color", (float*)&color);
             ImGui::ColorEdit3("clear color", (float*)&clear_color); 
 
+            ImGui::SliderFloat("Cone Width", &coneWidth, 0.1f, 10.0f);
+            ImGui::SliderFloat("Cone Height", &coneHeight, 0.1f, 10.0f);
+            ImGui::SliderInt("Cone Sides", &coneSides, 3, 64);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
@@ -447,6 +636,8 @@ int main()
         basicShader.setVec4("color", glm::vec4(color.x, color.y, color.z, color.w));
         basicShader.setMat4("view", viewMatrix);
         basicShader.setMat4("projection", projectionMatrix);
+
+        cone.generateCone(coneWidth, coneHeight, coneSides);
 
         sceneRoot.recalculate(glm::mat4(1.0f));
 

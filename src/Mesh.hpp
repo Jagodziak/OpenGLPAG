@@ -15,6 +15,7 @@ struct Vertex
 class Mesh
 {
 public:
+	Mesh() = default;
 	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices);
 
 	void draw(Shader& shader, bool drawAsLine = false);

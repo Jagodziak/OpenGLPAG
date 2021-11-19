@@ -17,7 +17,9 @@ class Model
 {
 public:
 	Model(std::string modelPath, bool drawAsLine = false);
+	Model();
 
+	void generateCone(float coneRadius, float coneHeight, int coneSides);
 	void draw(Shader& shader);
 
 	Transform modelTransform;
