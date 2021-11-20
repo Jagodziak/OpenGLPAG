@@ -1,8 +1,9 @@
 #include "Mesh.hpp"
 
 Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
-	: vertices(vertices), indices(indices)
 {
+    indexCount = indices.size(); //wyci¹gamy sobie iloœæ indexów
+
 	// Generate and bind VAO
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
@@ -41,11 +42,11 @@ void Mesh::draw(Shader& shader, bool drawAsLine)
     glBindVertexArray(VAO);
     if (drawAsLine)
     {
-        glDrawElements(GL_LINES, indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_LINES, indexCount, GL_UNSIGNED_INT, 0);
     }
     else
     {
-        glDrawElements(GL_TRIANGLES, indices.size(), GL_UNSIGNED_INT, 0);
+        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
     }
     glBindVertexArray(0);
 }

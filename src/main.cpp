@@ -591,17 +591,15 @@ int main()
         {
             ImGui::Begin("Okienko");
             ImGui::Checkbox("Draw wireframe", &wireframe);
-
-            ImGui::SliderFloat("Model scale", &modelScale, 0.01f, 2.0f);
             ImGui::Text("Camera Controls");
             ImGui::SliderFloat3("Camera Pos", cameraPosition, -50.0f, 50.0f);
             ImGui::SliderFloat("Camera Pitch", &cameraPitch, -180.0f, 180.0f);
             ImGui::SliderFloat("Camera Yaw", &cameraYaw, -180.0f, 180.0f);
-            ImGui::SliderFloat("Camera Zoom", &cameraZoom, -180.0f, 180.0f);
+            ImGui::SliderFloat("Camera Zoom", &cameraZoom, 1.0f, 400.0f);
             ImGui::Text("Color Controls");
             ImGui::ColorEdit3("texture color", (float*)&color);
             ImGui::ColorEdit3("clear color", (float*)&clear_color); 
-
+            ImGui::Text("Cone Controls");
             ImGui::SliderFloat("Cone Width", &coneWidth, 0.1f, 10.0f);
             ImGui::SliderFloat("Cone Height", &coneHeight, 0.1f, 10.0f);
             ImGui::SliderInt("Cone Sides", &coneSides, 3, 64);
@@ -627,8 +625,10 @@ int main()
         testModel.modelTransform.rotate(glm::vec3(rotationX, rotationY, 0.0f));
         testModel.modelTransform.scale(glm::vec3(modelScale, modelScale, modelScale));*/
 
-        // Przygotowanie macierzy
-        viewMatrix = glm::lookAt(glm::vec3(cameraYaw, cameraPitch, cameraZoom), glm::vec3(cameraPosition[0], cameraPosition[1], cameraPosition[2]), glm::vec3(0.0f, 1.0f, 0.0f));
+        float cameraX = glm::sin(glm::radians(cameraYaw)) * cameraZoom;
+        float cameraZ = glm::cos(glm::radians(cameraYaw)) * cameraZoom;
+        float cameraY = glm::sin(glm::radians(cameraPitch * 0.5f)) * cameraZoom;
+        viewMatrix = glm::lookAt(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(cameraPosition[0], cameraPosition[1], cameraPosition[2]), glm::vec3(0.0f, 1.0f, 0.0f));
 
         projectionMatrix = glm::mat4(1.0f);
         projectionMatrix = glm::perspective(glm::radians(60.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.01f, 3000.0f);
@@ -639,7 +639,8 @@ int main()
 
         cone.generateCone(coneWidth, coneHeight, coneSides);
 
-        sceneRoot.recalculate(glm::mat4(1.0f));
+        sceneRoot.simulate();
+        sceneRoot.recalculate();
 
         for (int i = 0; i < sceneObjects.size(); i++)
         {

@@ -12,7 +12,7 @@ void Texture::load(std::string texturePath)
 {
     // Wczytywanie tekstury z pliku za pomoc¹ biblioteki stb_image
     int width, height, nrChannels;
-    unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load(texturePath.c_str(), &width, &height, &nrChannels, 0); //stbi_load ³aduje teksturê 
 
     // Przekazujemy teksturê do karty graficznej
     glGenTextures(1, &textureID);

@@ -31,6 +31,6 @@ private:
 	bool drawAsLine;
 
 	void loadModel(std::string modelPath);
-	void processNode(aiNode* node, const aiScene* scene);
-	Mesh processMesh(aiMesh* mesh, const aiScene* scene);
+	void processNode(aiNode* node, const aiScene* scene); //przetwarza aiNode tak ¿eby mo¿na by³o wyci¹gn¹æ z niego aiMesh
+	Mesh processMesh(aiMesh* mesh, const aiScene* scene); //przetwarza aiMesh tak ¿eby mo¿na by³o wyci¹gn¹æ z niego nasz mesh
 };
