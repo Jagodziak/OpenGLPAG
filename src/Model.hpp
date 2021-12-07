@@ -26,11 +26,11 @@ public:
 	Texture texture;
 
 private:
-	std::vector<Mesh> meshes; // Collection for storing meshes
-	std::string directory; // From which (relative) directory the model is sourced
+	std::vector<Mesh> meshes; 
+	std::string directory; 
 	bool drawAsLine;
 
 	void loadModel(std::string modelPath);
-	void processNode(aiNode* node, const aiScene* scene); //przetwarza aiNode tak ¿eby mo¿na by³o wyci¹gn¹æ z niego aiMesh
-	Mesh processMesh(aiMesh* mesh, const aiScene* scene); //przetwarza aiMesh tak ¿eby mo¿na by³o wyci¹gn¹æ z niego nasz mesh
+	void processNode(aiNode* node, const aiScene* scene); 
+	Mesh processMesh(aiMesh* mesh, const aiScene* scene); 
 };

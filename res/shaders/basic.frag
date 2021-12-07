@@ -1,12 +1,12 @@
-#version 330 core // To samo co w vertex shaderze
-out vec4 FragColor; // Kolor piksela który zostanie wpisany na ekran
+#version 330 core 
+out vec4 FragColor; 
 
 in vec2 Texcoord;
 
 uniform vec4 color;
-uniform sampler2D ourTexture; // sampler2D - typ który pozwala nam uzyskaæ dane tekstury
+uniform sampler2D ourTexture; 
 
 void main()
 {
-    FragColor = texture(ourTexture, Texcoord) * color; //zmienia kolor tekstury
+    FragColor = texture(ourTexture, Texcoord) * color; 
 }

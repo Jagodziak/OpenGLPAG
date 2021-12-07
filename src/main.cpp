@@ -2,16 +2,16 @@
 
 #include "imgui.h"
 #include "imgui_impl_glfw.h"
-#include "imgui_impl_opengl3.h" // biblioteka do renderowania prostych interfejsów graficznych
+#include "imgui_impl_opengl3.h" 
 #include <stdio.h>
 
 #include <glm/glm.hpp> 
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <glad/glad.h>  // loader funkcji opengl
+#include <glad/glad.h>  
 
-#include <GLFW/glfw3.h> //biblioteka do tworzenia okna, zczytuje ruch myszy, klawisze itd 
+#include <GLFW/glfw3.h> 
 
 #include "Shader.hpp"
 #include "Model.hpp"
@@ -25,30 +25,30 @@ static void glfw_error_callback(int error, const char* description)
 
 int main() 
 {
-    // Ustawienie wyœwietlania b³êdów okna
+   
     glfwSetErrorCallback(glfw_error_callback);
 
-    // Inicjalizacja glfw
+    
     if (!glfwInit())
         return 1;
 
-    // Ustawienie minimalnej wspieranej wersji OpenGL (4.3)
+    
     const char* glsl_version = "#version 430";
-    // Parametry glfw
+   
     glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
 
-    // Tworzenie okna
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Zadanie 1- Kostka", NULL, NULL);
+   
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Zadanie 2- Uklad planetarny", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window); 
-    glfwSwapInterval(1); // Enable vsync- synchronizacja pionowa- blokuje fps ¿eby zsynchronizowaæ go z czêstotliwoœci¹ odœwie¿ania monitora
+    glfwSwapInterval(1); 
 
-    // Initialize OpenGL loader
+    
     bool err = !gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
     if (err)
@@ -57,7 +57,7 @@ int main()
         return 1;
     }
 
-    // Setup Dear ImGui binding
+  
     IMGUI_CHECKVERSION();
     ImGui::CreateContext();
     ImGuiIO& io = ImGui::GetIO(); (void)io;
@@ -65,14 +65,12 @@ int main()
     ImGui_ImplGlfw_InitForOpenGL(window, true);
     ImGui_ImplOpenGL3_Init(glsl_version);
 
-    // Setup style
+    
     ImGui::StyleColorsDark();
 
-    // Shader
-    Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
+        Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
 
-    // Model
-    std::vector<Model*> sceneObjects;
+        std::vector<Model*> sceneObjects;
 
     Model skybox("res/models/skybox.fbx");
     sceneObjects.push_back(&skybox);
@@ -91,11 +89,11 @@ int main()
     float orbitRadius, orbitAngle, orbitSpeed, planetRadius, planetSpeed;
 
     // ===== PLANET =================================================
-    orbitRadius = 40.0f;
-    orbitAngle = 5.0f;
-    orbitSpeed = -0.004f;
-    planetRadius = 0.08f;
-    planetSpeed = 0.05f;
+    orbitRadius = 40.0f; 
+    orbitAngle = 5.0f; 
+    orbitSpeed = -0.004f; 
+    planetRadius = 0.08f; 
+    planetSpeed = 0.05f; 
 
     Transform mercuryAngle;
     mercuryAngle.rotate(glm::vec3(0.0f, 0.0f, glm::radians(orbitAngle)));
@@ -104,7 +102,7 @@ int main()
     Model mercuryOrbit("res/models/orbit.fbx", true);
     sceneObjects.push_back(&mercuryOrbit);
     mercuryOrbit.texture.load("res/textures/white.jpg");
-    mercuryOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f));
+    mercuryOrbit.modelTransform.scale(glm::vec3(orbitRadius * 0.1f)); 
     mercuryAngle.addChild(&mercuryOrbit.modelTransform);
 
     Transform mercuryPivot;
@@ -562,11 +560,11 @@ int main()
     conePivot.addChild(&cone.modelTransform);
     // ===============================================================
 
-    // Zmienne pomocnicze paremetryzuj¹ce rendering
+   
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     ImVec4 color = ImVec4(1.0f, 1.0f, 1.00f, 1.00f);
-    float cameraPosition[3] = { 0.0f, 0.0f, 0.0f };
+    float cameraTargetPosition[3] = { 0.0f, 0.0f, 0.0f };
     float cameraPitch = 30.0f;
     float cameraYaw = 0.0f;
     float cameraZoom = 100.0f;
@@ -592,7 +590,7 @@ int main()
             ImGui::Begin("Okienko");
             ImGui::Checkbox("Draw wireframe", &wireframe);
             ImGui::Text("Camera Controls");
-            ImGui::SliderFloat3("Camera Pos", cameraPosition, -50.0f, 50.0f);
+            ImGui::SliderFloat3("Camera Pos", cameraTargetPosition, -50.0f, 50.0f);
             ImGui::SliderFloat("Camera Pitch", &cameraPitch, -180.0f, 180.0f);
             ImGui::SliderFloat("Camera Yaw", &cameraYaw, -180.0f, 180.0f);
             ImGui::SliderFloat("Camera Zoom", &cameraZoom, 1.0f, 400.0f);
@@ -610,7 +608,7 @@ int main()
 
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        // U¿ywaj bufora g³êbokoœci (rozwi¹zuje problemy z sortowaniem)
+        
         glEnable(GL_DEPTH_TEST);
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);  
@@ -621,16 +619,13 @@ int main()
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
-        /*testModel.modelTransform.reset();
-        testModel.modelTransform.rotate(glm::vec3(rotationX, rotationY, 0.0f));
-        testModel.modelTransform.scale(glm::vec3(modelScale, modelScale, modelScale));*/
-
         float cameraX = glm::sin(glm::radians(cameraYaw)) * cameraZoom;
         float cameraZ = glm::cos(glm::radians(cameraYaw)) * cameraZoom;
         float cameraY = glm::sin(glm::radians(cameraPitch * 0.5f)) * cameraZoom;
-        viewMatrix = glm::lookAt(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(cameraPosition[0], cameraPosition[1], cameraPosition[2]), glm::vec3(0.0f, 1.0f, 0.0f));
+        
+        viewMatrix = glm::lookAt(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(cameraTargetPosition[0], cameraTargetPosition[1], cameraTargetPosition[2]), glm::vec3(0.0f, 1.0f, 0.0f));
 
-        projectionMatrix = glm::mat4(1.0f);
+        
         projectionMatrix = glm::perspective(glm::radians(60.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.01f, 3000.0f);
 
         basicShader.setVec4("color", glm::vec4(color.x, color.y, color.z, color.w));
@@ -647,14 +642,12 @@ int main()
             sceneObjects[i]->draw(basicShader);
         }
 
-        glBindVertexArray(0);
-
         // Imgui ui render
         ImGui::Render();
         ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
 
         glfwMakeContextCurrent(window);
-        glfwSwapBuffers(window); //podwójne buforowanie
+        glfwSwapBuffers(window); 
     }
 
     // Cleanup

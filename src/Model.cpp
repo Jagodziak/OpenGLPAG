@@ -10,7 +10,7 @@ Model::Model(std::string modelPath, bool drawAsLine)
 
 Model::Model()
 {
-	drawAsLine = false;
+	this->drawAsLine = false;
 	meshes.push_back(Mesh());
 }
 
@@ -19,7 +19,7 @@ void Model::generateCone(float coneRadius, float coneHeight, int coneSides)
 	std::vector<Vertex> coneVertices;
 	std::vector<unsigned int> coneIndices;
 
-	Vertex tempVert;
+	Vertex tempVert; 	
 	tempVert.pos = glm::vec3(0.0f, 0.0f, 0.0f);
 	tempVert.norm = glm::vec3(0.0f, 0.0f, 0.0f);
 	tempVert.texcoord = glm::vec2(0.0f, 0.0f);

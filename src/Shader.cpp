@@ -10,7 +10,7 @@ Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath)
 {
     // ----- VERTEX SHADER -----
 
-    // £adujemy shader z pliku
+    
     std::ifstream shaderFile(vertexShaderPath);
     std::stringstream buffer;
     buffer << shaderFile.rdbuf();
@@ -24,7 +24,7 @@ Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath)
     glShaderSource(vertexShader, 1, &vertShader, NULL);
     glCompileShader(vertexShader);
 
-    // Sprawdzanie b³êdów kompilacji vertex shadera
+    
     int  success;
     char infoLog[512];
     glGetShaderiv(vertexShader, GL_COMPILE_STATUS, &success);
@@ -49,7 +49,7 @@ Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath)
     glShaderSource(fragmentShader, 1, &fragShader, NULL);
     glCompileShader(fragmentShader);
 
-    // Sprawdzanie b³êdów kompilacji fragment shadera
+    
     glGetShaderiv(fragmentShader, GL_COMPILE_STATUS, &success);
     if (!success)
     {
