@@ -16,7 +16,7 @@
 class Model
 {
 public:
-	Model(std::string modelPath, bool drawAsLine = false);
+	Model(std::string modelPath, bool drawAsLine = false, std::vector<glm::vec3>* instanceOffsets = nullptr);
 	Model();
 
 	void generateCone(float coneRadius, float coneHeight, int coneSides);
@@ -27,8 +27,10 @@ public:
 
 private:
 	std::vector<Mesh> meshes; 
+	std::vector<glm::vec3>* instanceOffsets = nullptr;
 	std::string directory; 
 	bool drawAsLine;
+	bool isInstanced;
 
 	void loadModel(std::string modelPath);
 	void processNode(aiNode* node, const aiScene* scene); 

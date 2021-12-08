@@ -2,9 +2,11 @@
 
 #include <iostream>
 
-Model::Model(std::string modelPath, bool drawAsLine)
+Model::Model(std::string modelPath, bool drawAsLine, std::vector<glm::vec3>* instanceOffsets)
 {
 	this->drawAsLine = drawAsLine;
+	this->isInstanced = isInstanced;
+	this->instanceOffsets = instanceOffsets;
 	loadModel(modelPath);
 }
 
@@ -153,5 +155,5 @@ Mesh Model::processMesh(aiMesh* mesh, const aiScene* scene)
 		}
 	}
 
-	return Mesh(vertices, indices);
+	return Mesh(vertices, indices, instanceOffsets);
 }

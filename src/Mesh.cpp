@@ -1,7 +1,8 @@
 #include "Mesh.hpp"
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<glm::vec3>* instanceOffsets)
 {
+    this->instanceOffsets = instanceOffsets;
     indexCount = indices.size(); 
 
 	// Generate and bind VAO
@@ -31,6 +32,20 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices)
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
+    if (instanceOffsets != nullptr)
+    {
+        glGenBuffers(1, &instanceVBO);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * instanceOffsets->size(), instanceOffsets->data(), GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+        glEnableVertexAttribArray(3);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        glVertexAttribDivisor(3, 1);
+    }
+
     // Bind to null for safety
     glBindVertexArray(0);
 }
@@ -39,13 +54,16 @@ void Mesh::draw(Shader& shader, bool drawAsLine)
 {
     shader.use();
     glBindVertexArray(VAO);
-    if (drawAsLine)
+
+    GLenum drawingMode = drawAsLine ? GL_LINES : GL_TRIANGLES;
+
+    if (instanceOffsets == nullptr)
     {
-        glDrawElements(GL_LINES, indexCount, GL_UNSIGNED_INT, 0);
+        glDrawElements(drawingMode, indexCount, GL_UNSIGNED_INT, 0);
     }
     else
     {
-        glDrawElements(GL_TRIANGLES, indexCount, GL_UNSIGNED_INT, 0);
+        glDrawElementsInstanced(drawingMode, indexCount, GL_UNSIGNED_INT, 0, instanceOffsets->size());
     }
     glBindVertexArray(0);
 }

@@ -15,16 +15,16 @@ struct Vertex
 class Mesh
 {
 public:
-	Mesh() = default; 
-					  
-					  
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices); 
+	Mesh() = default;		  
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<glm::vec3>* instanceOffsets = nullptr);
 
 	void draw(Shader& shader, bool drawAsLine = false); 
 
 private:
+	std::vector<glm::vec3>* instanceOffsets = nullptr;
 	int indexCount; 
 	GLuint VAO; 
-	GLuint VBO; 
-	GLuint EBO; 
+	GLuint VBO;
+	GLuint EBO;
+	GLuint instanceVBO;
 };
