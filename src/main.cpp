@@ -18,9 +18,104 @@
 
 const int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080;
 
+float lastX = WINDOW_WIDTH / 2.0f, lastY = WINDOW_HEIGHT / 2.0f;
+bool firstMouse = true;
+
+float deltaTime = 0.0f;	// Time between current frame and last frame
+float lastFrame = 0.0f; // Time of last frame
+bool wasEscapePressedLastFrame = false;
+bool cursorEnabled = false;
+
+float cameraSpeed = 12.0f;
+float cameraMultiplier = 4.0f;
+glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+float cameraPitch = 0.0f;
+float cameraYaw = 0.0f;
+float cameraRoll = 0.0f;
+
 static void glfw_error_callback(int error, const char* description)
 {
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
+}
+
+void processInput(GLFWwindow* window)
+{
+    int escape = glfwGetKey(window, GLFW_KEY_ESCAPE);
+    if (escape == GLFW_PRESS)
+    {
+        if (!wasEscapePressedLastFrame)
+        {
+            cursorEnabled = !cursorEnabled;
+            glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+        }
+        wasEscapePressedLastFrame = true;
+    }
+    else if (escape == GLFW_RELEASE)
+    {
+        wasEscapePressedLastFrame = false;
+    }
+
+    float deltaSpeed = cameraSpeed * deltaTime; // adjust accordingly
+
+    if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
+        deltaSpeed *= cameraMultiplier;
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+        cameraPos += deltaSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+        cameraPos -= deltaSpeed * cameraFront;
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
+    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+        cameraPos += deltaSpeed * cameraUp;
+    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+        cameraPos -= deltaSpeed * cameraUp;
+}
+
+void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+{
+    if (firstMouse) // initially set to true
+    {
+        lastX = xpos;
+        lastY = ypos;
+        firstMouse = false;
+    }
+
+    if (cursorEnabled)
+    {
+        lastX = xpos;
+        lastY = ypos;
+    }
+
+    if (!cursorEnabled)
+    {
+        float xoffset = xpos - lastX;
+        float yoffset = lastY - ypos; // reversed since y-coordinates range from bottom to top
+        lastX = xpos;
+        lastY = ypos;
+
+        const float sensitivity = 0.1f;
+        xoffset *= sensitivity;
+        yoffset *= sensitivity;
+
+        cameraYaw += xoffset;
+        cameraPitch += yoffset;
+
+        if (cameraPitch > 89.0f)
+            cameraPitch = 89.0f;
+        if (cameraPitch < -89.0f)
+            cameraPitch = -89.0f;
+
+        glm::vec3 direction;
+        direction.x = cos(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
+        direction.y = sin(glm::radians(cameraPitch));
+        direction.z = sin(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
+        cameraFront = glm::normalize(direction);
+    }
 }
 
 int main() 
@@ -38,11 +133,12 @@ int main()
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE); 
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
    
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Zadanie 3 - Uklad planetarny", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, "Zadanie 3 - Domki", NULL, NULL);
     if (window == NULL)
         return 1;
     glfwMakeContextCurrent(window); 
     glfwSwapInterval(1); 
+    glfwSetCursorPosCallback(window, mouse_callback);
     
     bool err = !gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
@@ -62,22 +158,22 @@ int main()
     ImGui::StyleColorsDark();
 
     Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
-    Shader basicInstancedShader("res/shaders/basic_instanced.vert", "res/shaders/basic_instanced.frag");
+    Shader phongShader("res/shaders/basic.vert", "res/shaders/phong.frag");
 
     std::vector<Model*> sceneObjects;
 
     Model skybox("res/models/skybox.fbx");
-    sceneObjects.push_back(&skybox);
     skybox.texture.load("res/textures/spiaggia_di_mondello_4k.png");
     skybox.modelTransform.rotate(glm::vec3(glm::radians(180.0f), 0.0f, 0.0f));
     skybox.modelTransform.scale(glm::vec3(12.0f, 12.0f, 12.0f));
 
     Transform sceneRoot;
-    //sceneRoot.rotate(glm::vec3(glm::radians(180.0f), 0.0f, 0.0f));
 
+    //
     Model ground("res/models/ground.fbx");
     sceneObjects.push_back(&ground);
     ground.texture.load("res/textures/sand_01_diff_2k.png");
+    ground.modelTransform.rotate(glm::vec3(glm::radians(180.0f), 0.0f, 0.0f));
     sceneRoot.addChild(&ground.modelTransform);
 
     Transform houses;
@@ -113,24 +209,36 @@ int main()
 
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
-    ImVec4 color = ImVec4(1.0f, 1.0f, 1.00f, 1.00f);
-    float cameraTargetPosition[3] = { 0.0f, 0.0f, 0.0f };
-    float cameraPitch = 30.0f;
-    float cameraYaw = 0.0f;
-    float cameraZoom = 100.0f;
     glm::mat4 modelMatrix, viewMatrix, projectionMatrix;
     float rotationX = 0.0f;
     float rotationY = 0.0f;
     float modelScale = 1.0f;
     int iterations = 1;
 
-    float coneWidth = 1.0f, coneHeight = 2.0f;
-    int coneSides = 16;
-    // ============================================ Main loop =======================================================================
+    // Lights
+    glm::vec3 ambient = glm::vec3(0.5f, 0.5f, 0.5f);
 
+    glm::vec3 directionalLight0Color = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 directionalLight0Direction = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    glm::vec3 pointLight0Color = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 pointLight0Position = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    glm::vec3 pointLight1Color = glm::vec3(1.0f, 1.0f, 1.0f);
+    glm::vec3 pointLight1Position = glm::vec3(1.0f, 1.0f, 1.0f);
+
+    glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+
+    //
+    // ============================================ Main loop =======================================================================
     while (!glfwWindowShouldClose(window))
     {
+        float currentFrame = glfwGetTime();
+        deltaTime = currentFrame - lastFrame;
+        lastFrame = currentFrame;
+
         glfwPollEvents(); //zbiera input
+        processInput(window);
 
         ImGui_ImplOpenGL3_NewFrame();
         ImGui_ImplGlfw_NewFrame();
@@ -139,18 +247,18 @@ int main()
         {
             ImGui::Begin("Okienko");
             ImGui::Checkbox("Draw wireframe", &wireframe);
+            ImGui::ColorEdit3("Clear color", (float*)&clear_color); 
+            ImGui::Text("Light Controls");
+            ImGui::ColorEdit3("Ambient color", glm::value_ptr(ambient));
+            ImGui::ColorEdit3("Directional light 0 color", glm::value_ptr(directionalLight0Color));
+            ImGui::DragFloat3("Directional light 0 pos", glm::value_ptr(directionalLight0Direction));
+            ImGui::ColorEdit3("Point light 0 color", glm::value_ptr(pointLight0Color));
+            ImGui::DragFloat3("Point light 0 pos", glm::value_ptr(pointLight0Position));
+            ImGui::ColorEdit3("Point light 1 color", glm::value_ptr(pointLight1Color));
+            ImGui::DragFloat3("Point light 1 pos", glm::value_ptr(pointLight1Position));
             ImGui::Text("Camera Controls");
-            ImGui::SliderFloat3("Camera Pos", cameraTargetPosition, -50.0f, 50.0f);
-            ImGui::SliderFloat("Camera Pitch", &cameraPitch, -180.0f, 180.0f);
-            ImGui::SliderFloat("Camera Yaw", &cameraYaw, -180.0f, 180.0f);
-            ImGui::SliderFloat("Camera Zoom", &cameraZoom, 1.0f, 400.0f);
-            ImGui::Text("Color Controls");
-            ImGui::ColorEdit3("texture color", (float*)&color);
-            ImGui::ColorEdit3("clear color", (float*)&clear_color); 
-            ImGui::Text("Cone Controls");
-            ImGui::SliderFloat("Cone Width", &coneWidth, 0.1f, 10.0f);
-            ImGui::SliderFloat("Cone Height", &coneHeight, 0.1f, 10.0f);
-            ImGui::SliderInt("Cone Sides", &coneSides, 3, 64);
+            ImGui::SliderFloat("Speed", &cameraSpeed, 0.1f, 25.0f);
+            ImGui::SliderFloat("Multiplier", &cameraMultiplier, 0.1f, 10.0f);
 
             ImGui::Text("Application average %.3f ms/frame (%.1f FPS)", 1000.0f / ImGui::GetIO().Framerate, ImGui::GetIO().Framerate);
             ImGui::End();
@@ -163,31 +271,44 @@ int main()
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);  
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-        
+        glEnable(GL_CULL_FACE);
+        glCullFace(GL_BACK);
+
         if (wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
         else
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
-
-        float cameraX = glm::sin(glm::radians(cameraYaw)) * cameraZoom;
-        float cameraZ = glm::cos(glm::radians(cameraYaw)) * cameraZoom;
-        float cameraY = glm::sin(glm::radians(cameraPitch * 0.5f)) * cameraZoom;
         
-        viewMatrix = glm::lookAt(glm::vec3(cameraX, cameraY, cameraZ), glm::vec3(cameraTargetPosition[0], cameraTargetPosition[1], cameraTargetPosition[2]), glm::vec3(0.0f, 1.0f, 0.0f));
-
+        viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         
         projectionMatrix = glm::perspective(glm::radians(60.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.01f, 15000.0f);
 
-        basicShader.setVec4("color", glm::vec4(color.x, color.y, color.z, color.w));
+        // Setting ambient lighting
+        basicShader.use();
+        basicShader.setVec3("ambient", ambient);
         basicShader.setMat4("view", viewMatrix);
         basicShader.setMat4("projection", projectionMatrix);
+        skybox.draw(basicShader);
 
+        phongShader.use();
+        phongShader.setVec3("ambient", ambient);
+        phongShader.setVec3("directionalLight0Dir", directionalLight0Direction);
+        phongShader.setVec3("directionalLight0Color", directionalLight0Color);
+        phongShader.setVec3("pointLight0Pos", pointLight0Position);
+        phongShader.setVec3("pointLight0Color", pointLight0Color);
+        phongShader.setVec3("pointLight1Pos", pointLight1Position);
+        phongShader.setVec3("pointLight1Color", pointLight1Color);
+        phongShader.setVec3("viewPos", cameraPos);
+        phongShader.setMat4("view", viewMatrix);
+        phongShader.setMat4("projection", projectionMatrix);
+
+        //
         sceneRoot.simulate();
         sceneRoot.recalculate();
 
         for (int i = 0; i < sceneObjects.size(); i++)
         {
-            sceneObjects[i]->draw(basicInstancedShader);
+            sceneObjects[i]->draw(phongShader);
         }
 
         // Imgui ui render
