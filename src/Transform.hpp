@@ -22,9 +22,9 @@ public:
 
 	float rotationSpeed = 0.0f;
 
+	glm::mat4 localTransform; 
+	glm::mat4 worldTransform; 
 private:
 	std::vector<Transform*> children;
 
-	glm::mat4 localTransform; 
-	glm::mat4 worldTransform; 
 };

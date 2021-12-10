@@ -169,7 +169,6 @@ int main()
 
     Transform sceneRoot;
 
-    //
     Model ground("res/models/ground.fbx");
     sceneObjects.push_back(&ground);
     ground.texture.load("res/textures/sand_01_diff_2k.png");
@@ -195,7 +194,7 @@ int main()
         }
         yOffset += gridIncrement;
     }
-
+    
     Model base("res/models/house_base.fbx", false, &houseOffsets);
     sceneObjects.push_back(&base);
     base.texture.load("res/textures/blue_painted_planks_diff_2k.png");
@@ -216,16 +215,36 @@ int main()
     int iterations = 1;
 
     // Lights
-    glm::vec3 ambient = glm::vec3(0.5f, 0.5f, 0.5f);
+    bool ambientEnabled = true;
+    glm::vec3 ambient = glm::vec3(0.3f, 0.3f, 0.3f);
 
-    glm::vec3 directionalLight0Color = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 directionalLight0Direction = glm::vec3(1.0f, 1.0f, 1.0f);
+    bool directionalEnabled = true;
+    glm::vec3 directionalLight0Color = glm::vec3(0.45f, 0.45f, 0.45f);
+    glm::vec3 directionalLight0Direction = glm::vec3(-1.0f, -1.0f, -1.0f);
+    Model directionalLight0Gizmo("res/models/arrow.fbx");
+    directionalLight0Gizmo.texture.load("res/textures/white.jpg");
 
-    glm::vec3 pointLight0Color = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 pointLight0Position = glm::vec3(1.0f, 1.0f, 1.0f);
+    bool pointEnabled = true;
+    glm::vec3 pointLight0Color = glm::vec3(0.0f, 1.0f, 0.0f);
+    glm::vec3 pointLight0Position = glm::vec3(1.0f, 75.0f, 1.0f);
+    Model pointLight0Gizmo("res/models/planet.fbx");
+    pointLight0Gizmo.texture.load("res/textures/white.jpg");
 
-    glm::vec3 pointLight1Color = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 pointLight1Position = glm::vec3(1.0f, 1.0f, 1.0f);
+    bool spot0Enabled = true;
+    glm::vec3 spotLight0Color = glm::vec3(1.0f, 0.0f, 0.0f);
+    glm::vec3 spotLight0Position = glm::vec3(-120.0f, 20.0f, 0.0f);
+    glm::vec3 spotLight0Direction = glm::vec3(1.0f, 0.0f, 0.0f);
+    float spotLight0Cutoff = 30.0f;
+    Model spotLight0Gizmo("res/models/cone.fbx");
+    spotLight0Gizmo.texture.load("res/textures/white.jpg");
+
+    bool spot1Enabled = true;
+    glm::vec3 spotLight1Color = glm::vec3(0.0f, 0.0f, 1.0f);
+    glm::vec3 spotLight1Position = glm::vec3(120.0f, 20.0f, 0.0f);
+    glm::vec3 spotLight1Direction = glm::vec3(-1.0f, 0.0f, 0.0f);
+    float spotLight1Cutoff = 30.0f;
+    Model spotLight1Gizmo("res/models/cone.fbx");
+    spotLight1Gizmo.texture.load("res/textures/white.jpg");
 
     glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
 
@@ -249,13 +268,29 @@ int main()
             ImGui::Checkbox("Draw wireframe", &wireframe);
             ImGui::ColorEdit3("Clear color", (float*)&clear_color); 
             ImGui::Text("Light Controls");
+            ImGui::Checkbox("Ambient enabled", &ambientEnabled);
             ImGui::ColorEdit3("Ambient color", glm::value_ptr(ambient));
+
+            ImGui::Checkbox("Directional enabled", &directionalEnabled);
             ImGui::ColorEdit3("Directional light 0 color", glm::value_ptr(directionalLight0Color));
             ImGui::DragFloat3("Directional light 0 pos", glm::value_ptr(directionalLight0Direction));
+
+            ImGui::Checkbox("Point enabled", &pointEnabled);
             ImGui::ColorEdit3("Point light 0 color", glm::value_ptr(pointLight0Color));
             ImGui::DragFloat3("Point light 0 pos", glm::value_ptr(pointLight0Position));
-            ImGui::ColorEdit3("Point light 1 color", glm::value_ptr(pointLight1Color));
-            ImGui::DragFloat3("Point light 1 pos", glm::value_ptr(pointLight1Position));
+
+            ImGui::Checkbox("Spot light 0 enabled", &spot0Enabled);
+            ImGui::ColorEdit3("Spot light 0 color", glm::value_ptr(spotLight0Color));
+            ImGui::DragFloat3("Spot light 0 pos", glm::value_ptr(spotLight0Position));
+            ImGui::DragFloat3("Spot light 0 dir", glm::value_ptr(spotLight0Direction));
+            ImGui::DragFloat("Spot light 0 cutoff", &spotLight0Cutoff);
+
+            ImGui::Checkbox("Spot light 1 enabled", &spot1Enabled);
+            ImGui::ColorEdit3("Spot light 1 color", glm::value_ptr(spotLight1Color));
+            ImGui::DragFloat3("Spot light 1 pos", glm::value_ptr(spotLight1Position));
+            ImGui::DragFloat3("Spot light 1 dir", glm::value_ptr(spotLight1Direction));
+            ImGui::DragFloat("Spot light 1 cutoff", &spotLight1Cutoff);
+
             ImGui::Text("Camera Controls");
             ImGui::SliderFloat("Speed", &cameraSpeed, 0.1f, 25.0f);
             ImGui::SliderFloat("Multiplier", &cameraMultiplier, 0.1f, 10.0f);
@@ -266,7 +301,6 @@ int main()
 
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
-        
         glEnable(GL_DEPTH_TEST);
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);  
@@ -285,22 +319,79 @@ int main()
 
         // Setting ambient lighting
         basicShader.use();
-        basicShader.setVec3("ambient", ambient);
+        glm::vec3 skyboxColor = glm::vec3(0.0f);
+        if (ambientEnabled)
+            skyboxColor += ambient;
+        if (directionalEnabled)
+            skyboxColor += directionalLight0Color;
+        basicShader.setVec3("ambient", skyboxColor);
         basicShader.setMat4("view", viewMatrix);
         basicShader.setMat4("projection", projectionMatrix);
         skybox.draw(basicShader);
 
+        pointLight0Position.x = glm::sin(lastFrame) * 65.0f;
+        pointLight0Position.z = glm::cos(lastFrame) * 65.0f;
+        pointLight0Gizmo.modelTransform.reset();
+        pointLight0Gizmo.modelTransform.move(pointLight0Position);
+        pointLight0Gizmo.modelTransform.scale(glm::vec3(0.25f));
+        basicShader.setVec3("ambient", pointLight0Color);
+        pointLight0Gizmo.draw(basicShader);
+
+        spotLight0Gizmo.modelTransform.worldTransform = glm::inverse(glm::lookAt(spotLight0Position, spotLight0Position + glm::normalize(spotLight0Direction), glm::vec3(0.0f, 1.0f, 0.0f)));
+        basicShader.setVec3("ambient", spotLight0Color);
+        spotLight0Gizmo.draw(basicShader);
+
+        spotLight1Gizmo.modelTransform.worldTransform = glm::inverse(glm::lookAt(spotLight1Position, spotLight1Position + glm::normalize(spotLight1Direction), glm::vec3(0.0f, 1.0f, 0.0f)));
+        basicShader.setVec3("ambient", spotLight1Color);
+        spotLight1Gizmo.draw(basicShader);
+
+        directionalLight0Gizmo.modelTransform.worldTransform = glm::inverse(glm::lookAt(glm::vec3(0.0f, 80.0f, 0.0f), glm::vec3(0.0f, 80.0f, 0.0f) + glm::normalize(directionalLight0Direction), glm::vec3(0.0f, 1.0f, 0.0f)));
+        basicShader.setVec3("ambient", directionalLight0Color);
+        directionalLight0Gizmo.draw(basicShader);
+
+        //
         phongShader.use();
-        phongShader.setVec3("ambient", ambient);
+        // Ambient
+        if (ambientEnabled)
+            phongShader.setVec3("ambient", ambient);
+        else
+            phongShader.setVec3("ambient", glm::vec3(0.0f));
+
+        // Directional
         phongShader.setVec3("directionalLight0Dir", directionalLight0Direction);
-        phongShader.setVec3("directionalLight0Color", directionalLight0Color);
+        if (directionalEnabled)
+            phongShader.setVec3("directionalLight0Color", directionalLight0Color);
+        else
+            phongShader.setVec3("directionalLight0Color", glm::vec3(0.0f));
+
+        // Point light
         phongShader.setVec3("pointLight0Pos", pointLight0Position);
-        phongShader.setVec3("pointLight0Color", pointLight0Color);
-        phongShader.setVec3("pointLight1Pos", pointLight1Position);
-        phongShader.setVec3("pointLight1Color", pointLight1Color);
+        if (pointEnabled)
+            phongShader.setVec3("pointLight0Color", pointLight0Color);
+        else
+            phongShader.setVec3("pointLight0Color", glm::vec3(0.0f));
+
+        // Spot lights
+        phongShader.setVec3("spotLight0Pos", spotLight0Position);
+        if (spot0Enabled)
+            phongShader.setVec3("spotLight0Color", spotLight0Color);
+        else
+            phongShader.setVec3("spotLight0Color", glm::vec3(0.0f));
+        phongShader.setVec3("spotLight0Dir", spotLight0Direction);
+        phongShader.setFloat("spotLight0Cutoff", glm::cos(glm::radians(spotLight0Cutoff)));
+
+        phongShader.setVec3("spotLight1Pos", spotLight1Position);
+        if (spot1Enabled)
+            phongShader.setVec3("spotLight1Color", spotLight1Color);
+        else
+            phongShader.setVec3("spotLight1Color", glm::vec3(0.0f));
+        phongShader.setVec3("spotLight1Dir", spotLight1Direction);
+        phongShader.setFloat("spotLight1Cutoff", glm::cos(glm::radians(spotLight1Cutoff)));
+
         phongShader.setVec3("viewPos", cameraPos);
         phongShader.setMat4("view", viewMatrix);
         phongShader.setMat4("projection", projectionMatrix);
+
 
         //
         sceneRoot.simulate();
