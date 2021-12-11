@@ -1,17 +1,20 @@
 #version 330 core 
 out vec4 FragColor; 
 
+// w modelu phonga s¹ dwie sk³adowe cieniowania
+//diffuse- opowiada za matowy kolor powierzchni
+//specular- odpowiada za rozb³ysk 
 in vec2 Texcoord;
 in vec3 Normal;
-in vec3 FragPos;
+in vec3 FragPos; //pozycja fragmentu reprezentowanego przez pixel w œwiecie 
 
 uniform sampler2D ourTexture; 
 
-uniform vec3 viewPos;
+uniform vec3 viewPos; //pozycja kamery, potrzebna do specular swiat³a
 
-uniform vec3 ambient;
+uniform vec3 ambient; //kolor ambientu
 
-uniform vec3 directionalLight0Dir;
+uniform vec3 directionalLight0Dir; //direction
 uniform vec3 directionalLight0Color;
 
 uniform vec3 pointLight0Pos;
@@ -20,26 +23,28 @@ uniform vec3 pointLight0Color;
 uniform vec3 spotLight0Pos;
 uniform vec3 spotLight0Dir;
 uniform vec3 spotLight0Color;
-uniform float spotLight0Cutoff;
+uniform float spotLight0Cutoff; //cosinus k¹ta rozwarcia œwiat³a
 
 uniform vec3 spotLight1Pos;
 uniform vec3 spotLight1Dir;
 uniform vec3 spotLight1Color;
 uniform float spotLight1Cutoff;
 
-float specularStrength = 0.5;
+float specularStrength = 0.5; //arbitralna zmienna 
 
-// Constants for attenuation
+// Constants for attenuation - sta³e wyt³umienia œwiat³a 
 const float constant = 1.0;
 const float linear = 0.007;
 const float quadratic = 0.0002;
 
+// oœwietlenie lambertowskie - sam diffuse
+
 vec3 directionalLight(vec3 lightDir, vec3 lightColor, vec3 norm)
 {
     // diffuse
-    lightDir = normalize(-lightDir);
-    float diff = max(dot(norm, lightDir), 0.0);
-    vec3 diffuse = lightColor * diff;  
+    lightDir = normalize(-lightDir); //odwracamy i normalizujemy wektor œwiat³a zeby móc policzyæ iloczyn skalarny
+    float diff = max(dot(norm, lightDir), 0.0); // liczymy iloczyn skalarny 
+    vec3 diffuse = lightColor * diff;  // natezenie swiatla  
 
     // specular
     vec3 viewDir = normalize(viewPos - FragPos);

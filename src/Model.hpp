@@ -16,18 +16,19 @@
 class Model
 {
 public:
-	Model(std::string modelPath, bool drawAsLine = false, std::vector<glm::vec3>* instanceOffsets = nullptr);
+	Model(std::string modelPath, bool drawAsLine = false, std::vector<Transform>* instanceOffsets = nullptr);
 	Model();
 
 	void generateCone(float coneRadius, float coneHeight, int coneSides);
 	void draw(Shader& shader);
+	void updateInstanceMatrices();
 
 	Transform modelTransform;
 	Texture texture;
 
 private:
 	std::vector<Mesh> meshes; 
-	std::vector<glm::vec3>* instanceOffsets = nullptr;
+	std::vector<Transform>* instanceOffsets = nullptr;
 	std::string directory; 
 	bool drawAsLine;
 	bool isInstanced;

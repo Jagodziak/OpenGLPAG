@@ -40,9 +40,9 @@ static void glfw_error_callback(int error, const char* description)
     fprintf(stderr, "Glfw Error %d: %s\n", error, description);
 }
 
-void processInput(GLFWwindow* window)
+void processInput(GLFWwindow* window) //WYWO£YWANY CO KLATKÊ, zczytuje imput z klawiatrury i myszy
 {
-    int escape = glfwGetKey(window, GLFW_KEY_ESCAPE);
+    int escape = glfwGetKey(window, GLFW_KEY_ESCAPE); //glfwgetkey przekazuje stan klawisza
     if (escape == GLFW_PRESS)
     {
         if (!wasEscapePressedLastFrame)
@@ -54,20 +54,20 @@ void processInput(GLFWwindow* window)
     }
     else if (escape == GLFW_RELEASE)
     {
-        wasEscapePressedLastFrame = false;
+        wasEscapePressedLastFrame = false; 
     }
 
-    float deltaSpeed = cameraSpeed * deltaTime; // adjust accordingly
+    float deltaSpeed = cameraSpeed * deltaTime; // adjust accordingly, delta speed to camera speed ustawiony przez nas (dostosowuje w zaleznosci od trwania klatki)
+
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         deltaSpeed *= cameraMultiplier;
-
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
         cameraPos += deltaSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
         cameraPos -= deltaSpeed * cameraFront;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
+        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed; //iloczyn wektorowy, normalize zeby wektor mia³ dlugoœæ 1
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
         cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
     if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
@@ -76,7 +76,7 @@ void processInput(GLFWwindow* window)
         cameraPos -= deltaSpeed * cameraUp;
 }
 
-void mouse_callback(GLFWwindow* window, double xpos, double ypos)
+void mouse_callback(GLFWwindow* window, double xpos, double ypos) 
 {
     if (firstMouse) // initially set to true
     {
@@ -98,18 +98,19 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         lastX = xpos;
         lastY = ypos;
 
-        const float sensitivity = 0.1f;
+        const float sensitivity = 0.1f; //czu³oœæ kamery 
         xoffset *= sensitivity;
         yoffset *= sensitivity;
 
         cameraYaw += xoffset;
         cameraPitch += yoffset;
 
-        if (cameraPitch > 89.0f)
+        if (cameraPitch > 89.0f) //zeby nie dalo sie zrobiæ salta 
             cameraPitch = 89.0f;
         if (cameraPitch < -89.0f)
             cameraPitch = -89.0f;
 
+        //matma, robi wektor który patrzy w przód kamery 
         glm::vec3 direction;
         direction.x = cos(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
         direction.y = sin(glm::radians(cameraPitch));
@@ -138,7 +139,7 @@ int main()
         return 1;
     glfwMakeContextCurrent(window); 
     glfwSwapInterval(1); 
-    glfwSetCursorPosCallback(window, mouse_callback);
+    glfwSetCursorPosCallback(window, mouse_callback); //ustawia ze mouse_callback bêdzie sie wywo³ywaæ gdy poruszasz mysz¹
     
     bool err = !gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
@@ -157,8 +158,8 @@ int main()
     
     ImGui::StyleColorsDark();
 
-    Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
-    Shader phongShader("res/shaders/basic.vert", "res/shaders/phong.frag");
+    Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag"); //
+    Shader phongShader("res/shaders/phong.vert", "res/shaders/phong.frag");
 
     std::vector<Model*> sceneObjects;
 
@@ -179,17 +180,27 @@ int main()
     sceneRoot.addChild(&houses);
 
     const int gridX = 200, gridY = 200;
-    const float gridIncrement = 150.0f;
-    std::vector<glm::vec3> houseOffsets;
-    houseOffsets.reserve(gridX * gridY);
+    const float gridIncrement = 150.0f; // odstêp miêdzy domkami 
+    std::vector<Transform> houseOffsets; //wektor w którym s¹ zapisane pozycje wszystkich domków
+    std::vector<Transform> roofOffsets;
+    houseOffsets.reserve(gridX * gridY); // rezerwujemy miejsce w wektorze na pozycje domków 
+    roofOffsets.reserve(gridX * gridY);
 
-    float yOffset = gridY * -0.5f * gridIncrement;
+    float yOffset = gridY * -0.5f * gridIncrement; //wpisuje pozycje domków do house offset
     for (int i = 0; i < gridY; i++)
     {
         float xOffset = gridX * -0.5f * gridIncrement;
         for (int j = 0; j < gridX; j++)
         {
-            houseOffsets.push_back(glm::vec3(xOffset, 0.0f, yOffset));
+            Transform houseTransform;
+            houseTransform.move(glm::vec3(xOffset, 0.0f, yOffset));
+            houseOffsets.push_back(houseTransform);
+            sceneRoot.addChild(&houseOffsets.back());
+            
+            Transform roofTransform;
+            roofOffsets.push_back(roofTransform);
+            houseTransform.addChild(&roofOffsets.back());
+            
             xOffset += gridIncrement;
         }
         yOffset += gridIncrement;
@@ -200,7 +211,7 @@ int main()
     base.texture.load("res/textures/blue_painted_planks_diff_2k.png");
     houses.addChild(&base.modelTransform);
 
-    Model roof("res/models/house_roof.fbx", false, &houseOffsets);
+    Model roof("res/models/house_roof.fbx", false, &roofOffsets);
     sceneObjects.push_back(&roof);
     roof.texture.load("res/textures/reed_roof_03_diff_2k.png");
     base.modelTransform.addChild(&roof.modelTransform);
@@ -209,10 +220,6 @@ int main()
     bool wireframe = false;
     ImVec4 clear_color = ImVec4(0.45f, 0.55f, 0.60f, 1.00f);
     glm::mat4 modelMatrix, viewMatrix, projectionMatrix;
-    float rotationX = 0.0f;
-    float rotationY = 0.0f;
-    float modelScale = 1.0f;
-    int iterations = 1;
 
     // Lights
     bool ambientEnabled = true;
@@ -246,17 +253,22 @@ int main()
     Model spotLight1Gizmo("res/models/cone.fbx");
     spotLight1Gizmo.texture.load("res/textures/white.jpg");
 
-    glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED);
+    glm::vec3 housePosition = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 housePositionLastFrame = housePosition;
+    glm::vec3 roofPosition = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 roofPositionLastFrame = roofPosition;
+
+    glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED); //ma pocz¹tek ustawia czy krsor jest zablokowany czy nie
 
     //
     // ============================================ Main loop =======================================================================
     while (!glfwWindowShouldClose(window))
     {
         float currentFrame = glfwGetTime();
-        deltaTime = currentFrame - lastFrame;
+        deltaTime = currentFrame - lastFrame; ///
         lastFrame = currentFrame;
 
-        glfwPollEvents(); //zbiera input
+        glfwPollEvents(); //zbiera input,cdzieki temu moge korzystaæ z glfw getkey
         processInput(window);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -267,6 +279,11 @@ int main()
             ImGui::Begin("Okienko");
             ImGui::Checkbox("Draw wireframe", &wireframe);
             ImGui::ColorEdit3("Clear color", (float*)&clear_color); 
+
+            ImGui::Text("House Controls");
+            ImGui::DragFloat3("House 1 pos", glm::value_ptr(housePosition));
+            ImGui::DragFloat3("Roof 1 pos", glm::value_ptr(roofPosition));
+
             ImGui::Text("Light Controls");
             ImGui::Checkbox("Ambient enabled", &ambientEnabled);
             ImGui::ColorEdit3("Ambient color", glm::value_ptr(ambient));
@@ -305,8 +322,8 @@ int main()
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);  
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-        glEnable(GL_CULL_FACE);
-        glCullFace(GL_BACK);
+        glEnable(GL_CULL_FACE); // wlacza opcje ni¿ej
+        glCullFace(GL_BACK); //nie renderujemy ty³ów œcianek 
 
         if (wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -314,10 +331,26 @@ int main()
             glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
         
         viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
-        
         projectionMatrix = glm::perspective(glm::radians(60.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.01f, 15000.0f);
 
-        // Setting ambient lighting
+        // House translation logic
+        if (housePosition != housePositionLastFrame || roofPosition != roofPositionLastFrame)
+        {
+            roofOffsets[(gridY * gridX) / 2].reset();
+            roofOffsets[(gridY * gridX) / 2].move(glm::vec3(roofPosition));
+
+            houseOffsets[(gridY * gridX) / 2].reset();
+            houseOffsets[(gridY * gridX) / 2].move(glm::vec3(housePosition));
+            
+            sceneRoot.recalculate();
+            base.updateInstanceMatrices();
+            roof.updateInstanceMatrices();
+        }
+
+        housePositionLastFrame = housePosition;
+        roofPositionLastFrame = roofPosition;
+
+        // Setting ambient lighting, skybox reaguje na kolor ambientu i kierunkowego
         basicShader.use();
         glm::vec3 skyboxColor = glm::vec3(0.0f);
         if (ambientEnabled)
@@ -329,14 +362,19 @@ int main()
         basicShader.setMat4("projection", projectionMatrix);
         skybox.draw(basicShader);
 
-        pointLight0Position.x = glm::sin(lastFrame) * 65.0f;
-        pointLight0Position.z = glm::cos(lastFrame) * 65.0f;
-        pointLight0Gizmo.modelTransform.reset();
+        //basic shaderem renderujemy skybox i wizualizacje œwiate³ 
+
+        pointLight0Position.x = glm::sin(lastFrame) * 65.0f; ///////////////////// orbitowanie punktowego œwiat³a wokó³ sceny
+        pointLight0Position.z = glm::cos(lastFrame) * 65.0f;//////////////////////////////////////
+        pointLight0Gizmo.modelTransform.reset(); // renderowanie wuzualizacji œwiat³a -GIZMO
         pointLight0Gizmo.modelTransform.move(pointLight0Position);
         pointLight0Gizmo.modelTransform.scale(glm::vec3(0.25f));
-        basicShader.setVec3("ambient", pointLight0Color);
+        basicShader.setVec3("ambient", pointLight0Color); //ustawia kolor kulki. uniform o nazwie ambient jest myl¹cy pozdrawiam 
         pointLight0Gizmo.draw(basicShader);
 
+        //aby gizmo patrzy³o siê w stronê w któr¹ œwieci œwiat³o.
+        //lookat zwraca macierz transformacji. przekazujesz mu pozycje gdzie ma sie coœ znajdowaæ i punkt na który ma patrzeæ a on robi z tego macierz
+        //do pozycji œwiat³a dodajemy kierunek œwiat³a i to nam daje punkt 
         spotLight0Gizmo.modelTransform.worldTransform = glm::inverse(glm::lookAt(spotLight0Position, spotLight0Position + glm::normalize(spotLight0Direction), glm::vec3(0.0f, 1.0f, 0.0f)));
         basicShader.setVec3("ambient", spotLight0Color);
         spotLight0Gizmo.draw(basicShader);
@@ -345,6 +383,7 @@ int main()
         basicShader.setVec3("ambient", spotLight1Color);
         spotLight1Gizmo.draw(basicShader);
 
+        //directional nie ma po³o¿enia wiêc jest wpisane arbitralne
         directionalLight0Gizmo.modelTransform.worldTransform = glm::inverse(glm::lookAt(glm::vec3(0.0f, 80.0f, 0.0f), glm::vec3(0.0f, 80.0f, 0.0f) + glm::normalize(directionalLight0Direction), glm::vec3(0.0f, 1.0f, 0.0f)));
         basicShader.setVec3("ambient", directionalLight0Color);
         directionalLight0Gizmo.draw(basicShader);
@@ -353,12 +392,12 @@ int main()
         phongShader.use();
         // Ambient
         if (ambientEnabled)
-            phongShader.setVec3("ambient", ambient);
+            phongShader.setVec3("ambient", ambient); //jak œwiatlo jest wlaczone to przekazuje kolor
         else
-            phongShader.setVec3("ambient", glm::vec3(0.0f));
+            phongShader.setVec3("ambient", glm::vec3(0.0f)); //jak nie to zwracam czarny 
 
         // Directional
-        phongShader.setVec3("directionalLight0Dir", directionalLight0Direction);
+        phongShader.setVec3("directionalLight0Dir", directionalLight0Direction); //przekazuje kierunek directionala
         if (directionalEnabled)
             phongShader.setVec3("directionalLight0Color", directionalLight0Color);
         else
@@ -392,15 +431,11 @@ int main()
         phongShader.setMat4("view", viewMatrix);
         phongShader.setMat4("projection", projectionMatrix);
 
-
-        //
-        sceneRoot.simulate();
-        sceneRoot.recalculate();
-
         for (int i = 0; i < sceneObjects.size(); i++)
         {
             sceneObjects[i]->draw(phongShader);
         }
+        //
 
         // Imgui ui render
         ImGui::Render();

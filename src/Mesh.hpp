@@ -5,6 +5,8 @@
 #include <glm/glm.hpp>
 #include "Shader.hpp"
 
+class Transform;
+
 struct Vertex
 {
 	glm::vec3 pos; 
@@ -16,12 +18,13 @@ class Mesh
 {
 public:
 	Mesh() = default;		  
-	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<glm::vec3>* instanceOffsets = nullptr);
+	Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Transform>* instanceOffsets = nullptr);
 
 	void draw(Shader& shader, bool drawAsLine = false); 
+	void updateInstanceMatrices();
 
 private:
-	std::vector<glm::vec3>* instanceOffsets = nullptr;
+	std::vector<Transform>* instanceOffsets = nullptr;
 	int indexCount; 
 	GLuint VAO; 
 	GLuint VBO;

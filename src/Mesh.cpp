@@ -1,6 +1,7 @@
 #include "Mesh.hpp"
+#include <Transform.hpp>
 
-Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<glm::vec3>* instanceOffsets)
+Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std::vector<Transform>* instanceOffsets)
 {
     this->instanceOffsets = instanceOffsets;
     indexCount = indices.size(); 
@@ -32,19 +33,24 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
     glVertexAttribPointer(2, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(6 * sizeof(float)));
     glEnableVertexAttribArray(2);
 
-    if (instanceOffsets != nullptr)
-    {
-        glGenBuffers(1, &instanceVBO);
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::vec3) * instanceOffsets->size(), instanceOffsets->data(), GL_STATIC_DRAW);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glGenBuffers(1, &instanceVBO);
+    updateInstanceMatrices();
 
-        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
-        glVertexAttribPointer(3, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-        glEnableVertexAttribArray(3);
-        glBindBuffer(GL_ARRAY_BUFFER, 0);
-        glVertexAttribDivisor(3, 1);
-    }
+    glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+    std::size_t vec4Size = sizeof(glm::vec4);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(3, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)0);
+    glEnableVertexAttribArray(4);
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(1 * vec4Size));
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(2 * vec4Size));
+    glEnableVertexAttribArray(6);
+    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
+
+    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(4, 1);
+    glVertexAttribDivisor(5, 1);
+    glVertexAttribDivisor(6, 1);
 
     // Bind to null for safety
     glBindVertexArray(0);
@@ -66,4 +72,30 @@ void Mesh::draw(Shader& shader, bool drawAsLine)
         glDrawElementsInstanced(drawingMode, indexCount, GL_UNSIGNED_INT, 0, instanceOffsets->size());
     }
     glBindVertexArray(0);
+}
+
+void Mesh::updateInstanceMatrices()
+{
+    if (instanceOffsets != nullptr)
+    {
+        glm::mat4* matrices = new glm::mat4[instanceOffsets->size()];
+        for (size_t i = 0; i < instanceOffsets->size(); i++)
+        {
+            matrices[i] = (*instanceOffsets)[i].getWorldTransform();
+        }
+
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4) * instanceOffsets->size(), matrices, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+        
+        delete matrices;
+    }
+    else
+    {
+        // This is a dirty dirty hack I am really sorry for this :<
+        glm::mat4 identity(1.0f);
+        glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
+        glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4), &identity, GL_STATIC_DRAW);
+        glBindBuffer(GL_ARRAY_BUFFER, 0);
+    }
 }

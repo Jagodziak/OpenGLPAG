@@ -2,7 +2,7 @@
 
 #include <iostream>
 
-Model::Model(std::string modelPath, bool drawAsLine, std::vector<glm::vec3>* instanceOffsets)
+Model::Model(std::string modelPath, bool drawAsLine, std::vector<Transform>* instanceOffsets)
 {
 	this->drawAsLine = drawAsLine;
 	this->isInstanced = isInstanced;
@@ -72,6 +72,14 @@ void Model::draw(Shader& shader)
 	for (auto mesh : meshes)
 	{
 		mesh.draw(shader, drawAsLine);
+	}
+}
+
+void Model::updateInstanceMatrices()
+{
+	for (size_t i = 0; i < meshes.size(); i++)
+	{
+		meshes[i].updateInstanceMatrices();
 	}
 }
 
