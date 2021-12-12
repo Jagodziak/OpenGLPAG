@@ -42,15 +42,18 @@ const float quadratic = 0.0002;
 vec3 directionalLight(vec3 lightDir, vec3 lightColor, vec3 norm)
 {
     // diffuse
+    // Lambert
     lightDir = normalize(-lightDir); //odwracamy i normalizujemy wektor œwiat³a zeby móc policzyæ iloczyn skalarny
     float diff = max(dot(norm, lightDir), 0.0); // liczymy iloczyn skalarny 
     vec3 diffuse = lightColor * diff;  // natezenie swiatla  
 
     // specular
+    // Phong
     vec3 viewDir = normalize(viewPos - FragPos);
-    vec3 halfwayDir = normalize(lightDir + viewDir);  
+    vec3 halfwayDir = normalize(lightDir + viewDir); // Blinn-Phong
+    //vec3 reflectDir = reflect(-lightDir, norm // Phong
     float spec = pow(max(dot(norm, halfwayDir), 0.0), 16.0);
-    vec3 specular = lightColor * spec;  
+    vec3 specular = specularStrength * lightColor * spec;  
         
     return diffuse + specular;
 }
@@ -58,7 +61,7 @@ vec3 directionalLight(vec3 lightDir, vec3 lightColor, vec3 norm)
 vec3 pointLight(vec3 lightPos, vec3 lightColor, vec3 norm)
 {
     // diffuse
-    vec3 lightDir = normalize(lightPos - FragPos);
+    vec3 lightDir = normalize(lightPos - FragPos); // Jedyna ró¿nica wzglêdem directionala
     float diff = max(dot(norm, lightDir), 0.0);
     vec3 diffuse = diff * lightColor;
 

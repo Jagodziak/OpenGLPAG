@@ -199,7 +199,7 @@ int main()
             
             Transform roofTransform;
             roofOffsets.push_back(roofTransform);
-            houseTransform.addChild(&roofOffsets.back());
+            houseOffsets.back().addChild(&roofOffsets.back());
             
             xOffset += gridIncrement;
         }
@@ -336,13 +336,12 @@ int main()
         // House translation logic
         if (housePosition != housePositionLastFrame || roofPosition != roofPositionLastFrame)
         {
-            roofOffsets[(gridY * gridX) / 2].reset();
-            roofOffsets[(gridY * gridX) / 2].move(glm::vec3(roofPosition));
+            roofOffsets[((gridY * gridX) / 2) - gridX / 2].reset();
+            houseOffsets[((gridY * gridX) / 2) - gridX / 2].reset();
 
-            houseOffsets[(gridY * gridX) / 2].reset();
-            houseOffsets[(gridY * gridX) / 2].move(glm::vec3(housePosition));
-            
-            sceneRoot.recalculate();
+            roofOffsets[((gridY * gridX) / 2) - gridX / 2].move(glm::vec3(roofPosition));
+            houseOffsets[((gridY * gridX) / 2) - gridX / 2].move(glm::vec3(housePosition));
+
             base.updateInstanceMatrices();
             roof.updateInstanceMatrices();
         }
