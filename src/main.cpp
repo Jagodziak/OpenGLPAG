@@ -105,12 +105,12 @@ void mouse_callback(GLFWwindow* window, double xpos, double ypos)
         cameraYaw += xoffset;
         cameraPitch += yoffset;
 
-        if (cameraPitch > 89.0f) //zeby nie dalo sie zrobiæ salta 
+        if (cameraPitch > 89.0f) 
             cameraPitch = 89.0f;
         if (cameraPitch < -89.0f)
             cameraPitch = -89.0f;
 
-        //matma, robi wektor który patrzy w przód kamery 
+        //camra vector front looking
         glm::vec3 direction;
         direction.x = cos(glm::radians(cameraYaw)) * cos(glm::radians(cameraPitch));
         direction.y = sin(glm::radians(cameraPitch));
@@ -179,11 +179,12 @@ int main()
     Transform houses;
     sceneRoot.addChild(&houses);
 
+    //placing houses
     const int gridX = 200, gridY = 200;
-    const float gridIncrement = 150.0f; // odstêp miêdzy domkami 
-    std::vector<Transform> houseOffsets; //wektor w którym s¹ zapisane pozycje wszystkich domków
+    const float gridIncrement = 150.0f;  
+    std::vector<Transform> houseOffsets; //vector with houses positions
     std::vector<Transform> roofOffsets;
-    houseOffsets.reserve(gridX * gridY); // rezerwujemy miejsce w wektorze na pozycje domków 
+    houseOffsets.reserve(gridX * gridY); 
     roofOffsets.reserve(gridX * gridY);
 
     float yOffset = gridY * -0.5f * gridIncrement; //wpisuje pozycje domków do house offset
@@ -258,8 +259,7 @@ int main()
     glm::vec3 roofPosition = glm::vec3(0.0f, 0.0f, 0.0f);
     glm::vec3 roofPositionLastFrame = roofPosition;
 
-    glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED); //ma pocz¹tek ustawia czy krsor jest zablokowany czy nie
-
+    glfwSetInputMode(window, GLFW_CURSOR, cursorEnabled ? GLFW_CURSOR_NORMAL : GLFW_CURSOR_DISABLED); //cursor block
     //
     // ============================================ Main loop =======================================================================
     while (!glfwWindowShouldClose(window))
@@ -268,7 +268,7 @@ int main()
         deltaTime = currentFrame - lastFrame; ///
         lastFrame = currentFrame;
 
-        glfwPollEvents(); //zbiera input,cdzieki temu moge korzystaæ z glfw getkey
+        glfwPollEvents(); //collect imput
         processInput(window);
 
         ImGui_ImplOpenGL3_NewFrame();
@@ -322,8 +322,8 @@ int main()
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);  
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
-        glEnable(GL_CULL_FACE); // wlacza opcje ni¿ej
-        glCullFace(GL_BACK); //nie renderujemy ty³ów œcianek 
+        glEnable(GL_CULL_FACE); 
+        glCullFace(GL_BACK); 
 
         if (wireframe)
             glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
@@ -361,14 +361,14 @@ int main()
         basicShader.setMat4("projection", projectionMatrix);
         skybox.draw(basicShader);
 
-        //basic shaderem renderujemy skybox i wizualizacje œwiate³ 
+        //skybox and lights render with basic shader
 
-        pointLight0Position.x = glm::sin(lastFrame) * 65.0f; ///////////////////// orbitowanie punktowego œwiat³a wokó³ sceny
+        pointLight0Position.x = glm::sin(lastFrame) * 65.0f; //point light orbiting
         pointLight0Position.z = glm::cos(lastFrame) * 65.0f;//////////////////////////////////////
-        pointLight0Gizmo.modelTransform.reset(); // renderowanie wuzualizacji œwiat³a -GIZMO
+        pointLight0Gizmo.modelTransform.reset(); // light visualisation rendering
         pointLight0Gizmo.modelTransform.move(pointLight0Position);
         pointLight0Gizmo.modelTransform.scale(glm::vec3(0.25f));
-        basicShader.setVec3("ambient", pointLight0Color); //ustawia kolor kulki. uniform o nazwie ambient jest myl¹cy pozdrawiam 
+        basicShader.setVec3("ambient", pointLight0Color); 
         pointLight0Gizmo.draw(basicShader);
 
         //aby gizmo patrzy³o siê w stronê w któr¹ œwieci œwiat³o.
@@ -382,7 +382,6 @@ int main()
         basicShader.setVec3("ambient", spotLight1Color);
         spotLight1Gizmo.draw(basicShader);
 
-        //directional nie ma po³o¿enia wiêc jest wpisane arbitralne
         directionalLight0Gizmo.modelTransform.worldTransform = glm::inverse(glm::lookAt(glm::vec3(0.0f, 80.0f, 0.0f), glm::vec3(0.0f, 80.0f, 0.0f) + glm::normalize(directionalLight0Direction), glm::vec3(0.0f, 1.0f, 0.0f)));
         basicShader.setVec3("ambient", directionalLight0Color);
         directionalLight0Gizmo.draw(basicShader);
@@ -391,12 +390,12 @@ int main()
         phongShader.use();
         // Ambient
         if (ambientEnabled)
-            phongShader.setVec3("ambient", ambient); //jak œwiatlo jest wlaczone to przekazuje kolor
+            phongShader.setVec3("ambient", ambient); //on
         else
-            phongShader.setVec3("ambient", glm::vec3(0.0f)); //jak nie to zwracam czarny 
+            phongShader.setVec3("ambient", glm::vec3(0.0f)); //off- return black 
 
         // Directional
-        phongShader.setVec3("directionalLight0Dir", directionalLight0Direction); //przekazuje kierunek directionala
+        phongShader.setVec3("directionalLight0Dir", directionalLight0Direction);
         if (directionalEnabled)
             phongShader.setVec3("directionalLight0Color", directionalLight0Color);
         else

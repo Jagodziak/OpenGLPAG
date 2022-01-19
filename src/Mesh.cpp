@@ -47,7 +47,7 @@ Mesh::Mesh(std::vector<Vertex> vertices, std::vector<unsigned int> indices, std:
     glEnableVertexAttribArray(6);
     glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, 4 * vec4Size, (void*)(3 * vec4Size));
 
-    glVertexAttribDivisor(3, 1);
+    glVertexAttribDivisor(3, 1); 
     glVertexAttribDivisor(4, 1);
     glVertexAttribDivisor(5, 1);
     glVertexAttribDivisor(6, 1);
@@ -92,7 +92,6 @@ void Mesh::updateInstanceMatrices()
     }
     else
     {
-        // This is a dirty dirty hack I am really sorry for this :<
         glm::mat4 identity(1.0f);
         glBindBuffer(GL_ARRAY_BUFFER, instanceVBO);
         glBufferData(GL_ARRAY_BUFFER, sizeof(glm::mat4), &identity, GL_STATIC_DRAW);
