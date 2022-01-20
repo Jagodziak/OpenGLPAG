@@ -22,6 +22,7 @@ public:
 
 	void draw(Shader& shader, bool drawAsLine = false); 
 	void updateInstanceMatrices();
+	void setInstanceOffsetsPtr(std::vector<Transform>* instanceOffsets);
 
 private:
 	std::vector<Transform>* instanceOffsets = nullptr;

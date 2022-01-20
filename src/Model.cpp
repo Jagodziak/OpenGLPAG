@@ -83,6 +83,15 @@ void Model::updateInstanceMatrices()
 	}
 }
 
+void Model::updateInstanceMatrices(std::vector<Transform>* instanceOffsets)
+{
+	for (size_t i = 0; i < meshes.size(); i++)
+	{
+		meshes[i].setInstanceOffsetsPtr(instanceOffsets);
+		meshes[i].updateInstanceMatrices();
+	}
+}
+
 void Model::loadModel(std::string modelPath)
 {
 	Assimp::Importer importer;

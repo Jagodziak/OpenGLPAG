@@ -98,3 +98,8 @@ void Mesh::updateInstanceMatrices()
         glBindBuffer(GL_ARRAY_BUFFER, 0);
     }
 }
+
+void Mesh::setInstanceOffsetsPtr(std::vector<Transform>* instanceOffsets)
+{
+    this->instanceOffsets = instanceOffsets;
+}

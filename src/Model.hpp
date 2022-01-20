@@ -22,6 +22,7 @@ public:
 	void generateCone(float coneRadius, float coneHeight, int coneSides);
 	void draw(Shader& shader);
 	void updateInstanceMatrices();
+	void updateInstanceMatrices(std::vector<Transform>* instanceOffsets);
 
 	Transform modelTransform;
 	Texture texture;

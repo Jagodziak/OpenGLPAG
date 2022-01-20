@@ -9,12 +9,14 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include <random>
 #include <glad/glad.h>  
 
 #include <GLFW/glfw3.h> 
 
 #include "Shader.hpp"
 #include "Model.hpp"
+#include "Particles.hpp"
 
 const int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080;
 
@@ -25,10 +27,12 @@ float deltaTime = 0.0f;	// Time between current frame and last frame
 float lastFrame = 0.0f; // Time of last frame
 bool wasEscapePressedLastFrame = false;
 bool cursorEnabled = false;
+bool wasDoorOpenLastFrame = false;
+bool isDoorOpen = false;
 
 float cameraSpeed = 12.0f;
 float cameraMultiplier = 4.0f;
-glm::vec3 cameraPos = glm::vec3(0.0f, 0.0f, 0.0f);
+glm::vec3 cameraPos = glm::vec3(0.0f, 12.0f, 100.0f);
 glm::vec3 cameraFront = glm::vec3(0.0f, 0.0f, -1.0f);
 glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 float cameraPitch = 0.0f;
@@ -55,25 +59,41 @@ void processInput(GLFWwindow* window) //WYWO£YWANY CO KLATKÊ, zczytuje imput z k
     else if (escape == GLFW_RELEASE)
     {
         wasEscapePressedLastFrame = false; 
+    }//
+
+    int f = glfwGetKey(window, GLFW_KEY_F); //glfwgetkey przekazuje stan klawisza
+    if (f == GLFW_PRESS)
+    {
+        if (!wasDoorOpenLastFrame)
+        {
+            isDoorOpen = !isDoorOpen;
+        }
+        wasDoorOpenLastFrame = true;
+    }
+    else if (f == GLFW_RELEASE)
+    {
+        wasDoorOpenLastFrame = false;
     }
 
     float deltaSpeed = cameraSpeed * deltaTime; // adjust accordingly, delta speed to camera speed ustawiony przez nas (dostosowuje w zaleznosci od trwania klatki)
 
+    glm::vec3 xz = glm::vec3(cameraFront.x, 0.0f, cameraFront.z);
+    xz = glm::normalize(xz);
 
     if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)
         deltaSpeed *= cameraMultiplier;
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
-        cameraPos += deltaSpeed * cameraFront;
+        cameraPos += deltaSpeed * xz;
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
-        cameraPos -= deltaSpeed * cameraFront;
+        cameraPos -= deltaSpeed * xz;
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
-        cameraPos -= glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed; //iloczyn wektorowy, normalize zeby wektor mia³ dlugoœæ 1
+        cameraPos -= glm::normalize(glm::cross(xz, cameraUp)) * deltaSpeed; //iloczyn wektorowy, normalize zeby wektor mia³ dlugoœæ 1
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
-        cameraPos += glm::normalize(glm::cross(cameraFront, cameraUp)) * deltaSpeed;
-    if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
-        cameraPos += deltaSpeed * cameraUp;
-    if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
-        cameraPos -= deltaSpeed * cameraUp;
+        cameraPos += glm::normalize(glm::cross(xz, cameraUp)) * deltaSpeed;
+    //if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS)
+    //    cameraPos += deltaSpeed * cameraUp;
+    //if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS || glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS)
+    //    cameraPos -= deltaSpeed * cameraUp;
 }
 
 void mouse_callback(GLFWwindow* window, double xpos, double ypos) 
@@ -176,23 +196,56 @@ int main()
     ground.modelTransform.rotate(glm::vec3(glm::radians(180.0f), 0.0f, 0.0f));
     sceneRoot.addChild(&ground.modelTransform);
 
+    const int N_TREES = 500;
+    const float RANGE = 200.0f;
+    std::vector<Transform> treeTransforms, treeTransforms2;
+    treeTransforms.reserve(N_TREES);
+    treeTransforms2.reserve(N_TREES);
 
-    Model tree("res/models/house/tree_branched.fbx");
+    std::default_random_engine generator(2);
+    std::uniform_real_distribution<float> distribution(-RANGE, RANGE);
+    std::uniform_real_distribution<float> rotation(0.0f, 360.0f);
+    std::uniform_real_distribution<float> scale(1.0f, 2.5f);
+    
+    for (size_t i = 0; i < N_TREES; i++)
+    {
+        float val1 = distribution(generator);
+        float val2 = distribution(generator);
+        glm::mat4 mat = glm::translate(glm::mat4(1.0f), glm::vec3(val1, val2, 0.0f));
+        mat = glm::rotate(mat, glm::radians(rotation(generator)), glm::vec3(0.0f, 0.0f, 1.0f));
+        mat = glm::scale(mat, glm::vec3(scale(generator)));
+        treeTransforms.push_back(mat);
+    }
+
+    for (size_t i = 0; i < N_TREES; i++)
+    {
+        float val1 = distribution(generator);
+        float val2 = distribution(generator);
+        glm::mat4 mat = glm::translate(glm::mat4(1.0f), glm::vec3(val1, val2, 0.0f));
+        mat = glm::rotate(mat, glm::radians(rotation(generator)), glm::vec3(0.0f, 0.0f, 1.0f));
+        mat = glm::scale(mat, glm::vec3(scale(generator)));
+        treeTransforms2.push_back(mat);
+    }
+
+    Model tree("res/models/house/tree_branched.fbx", false, &treeTransforms);
     sceneObjects.push_back(&tree);
     tree.texture.load("res/textures/tree.png");
-    tree.modelTransform.move(glm::vec3(70.0f, 0.0f, 70.0f));
     tree.modelTransform.rotate(glm::vec3(glm::radians(-90.0f), 0.0f, 0.0f));
     tree.modelTransform.scale(glm::vec3(8.0f));
     sceneRoot.addChild(&tree.modelTransform);
 
-    Model tree2("res/models/house/tree_open.fbx");
+    Model tree2("res/models/house/tree_open.fbx", false, &treeTransforms2);
     sceneObjects.push_back(&tree2);
     tree2.texture.load("res/textures/tree.png");
-    tree2.modelTransform.move(glm::vec3(-70.0f, 0.0f, -70.0f));
     tree2.modelTransform.rotate(glm::vec3(glm::radians(-90.0f), 0.0f, 0.0f));
     tree2.modelTransform.scale(glm::vec3(8.0f));
     sceneRoot.addChild(&tree2.modelTransform);
 
+    Model particleBox("res/models/box.fbx");
+    particleBox.texture.load("res/textures/white.jpg");
+    particleBox.modelTransform.move(glm::vec3(26.0f, 63.0f, 15.0f));
+    sceneRoot.addChild(&particleBox.modelTransform);
+    Particles particles(&particleBox, &phongShader, &sceneRoot, 250, 15);
 
     Transform houseRoot;
     houseRoot.scale(glm::vec3(5.0f, 5.0f, 5.0f));
@@ -211,13 +264,13 @@ int main()
     houseRoot.addChild(&house_interior.modelTransform);
 
     Model door_closed("res/models/house/door_closed.fbx");
-    sceneObjects.push_back(&door_closed);
+    //sceneObjects.push_back(&door_closed);
     door_closed.texture.load("res/textures/HouseTexture1.png");
     door_closed.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
     houseRoot.addChild(&door_closed.modelTransform);
 
     Model door_open("res/models/house/door_open.fbx");
-    sceneObjects.push_back(&door_open);
+    //sceneObjects.push_back(&door_open);
     door_open.texture.load("res/textures/HouseTexture1.png");
     door_open.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
     houseRoot.addChild(&door_open.modelTransform);
@@ -251,7 +304,7 @@ int main()
     glm::vec3 ambient = glm::vec3(0.3f, 0.3f, 0.3f);
 
     bool directionalEnabled = true;
-    glm::vec3 directionalLight0Color = glm::vec3(0.45f, 0.45f, 0.45f);
+    glm::vec3 directionalLight0Color = glm::vec3(1.0f, 1.0f, 1.0f);
     glm::vec3 directionalLight0Direction = glm::vec3(-1.0f, -1.0f, -1.0f);
     Model directionalLight0Gizmo("res/models/arrow.fbx");
     directionalLight0Gizmo.texture.load("res/textures/white.jpg");
@@ -444,7 +497,16 @@ int main()
         {
             sceneObjects[i]->draw(phongShader);
         }
-        //
+
+        if (isDoorOpen)
+        {
+            door_open.draw(phongShader);
+        }
+        else
+        {
+            door_closed.draw(phongShader);
+        }
+        particles.UpdateAndRender();
 
         // Imgui ui render
         ImGui::Render();
