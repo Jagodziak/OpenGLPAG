@@ -176,46 +176,70 @@ int main()
     ground.modelTransform.rotate(glm::vec3(glm::radians(180.0f), 0.0f, 0.0f));
     sceneRoot.addChild(&ground.modelTransform);
 
-    Transform houses;
-    sceneRoot.addChild(&houses);
 
-    //placing houses
-    const int gridX = 200, gridY = 200;
-    const float gridIncrement = 150.0f;  
-    std::vector<Transform> houseOffsets; //vector with houses positions
-    std::vector<Transform> roofOffsets;
-    houseOffsets.reserve(gridX * gridY); 
-    roofOffsets.reserve(gridX * gridY);
+    Model tree("res/models/house/tree_branched.fbx");
+    sceneObjects.push_back(&tree);
+    tree.texture.load("res/textures/tree.png");
+    tree.modelTransform.move(glm::vec3(70.0f, 0.0f, 70.0f));
+    tree.modelTransform.rotate(glm::vec3(glm::radians(-90.0f), 0.0f, 0.0f));
+    tree.modelTransform.scale(glm::vec3(8.0f));
+    sceneRoot.addChild(&tree.modelTransform);
 
-    float yOffset = gridY * -0.5f * gridIncrement; //wpisuje pozycje domków do house offset
-    for (int i = 0; i < gridY; i++)
-    {
-        float xOffset = gridX * -0.5f * gridIncrement;
-        for (int j = 0; j < gridX; j++)
-        {
-            Transform houseTransform;
-            houseTransform.move(glm::vec3(xOffset, 0.0f, yOffset));
-            houseOffsets.push_back(houseTransform);
-            sceneRoot.addChild(&houseOffsets.back());
-            
-            Transform roofTransform;
-            roofOffsets.push_back(roofTransform);
-            houseOffsets.back().addChild(&roofOffsets.back());
-            
-            xOffset += gridIncrement;
-        }
-        yOffset += gridIncrement;
-    }
-    
-    Model base("res/models/house_base.fbx", false, &houseOffsets);
-    sceneObjects.push_back(&base);
-    base.texture.load("res/textures/blue_painted_planks_diff_2k.png");
-    houses.addChild(&base.modelTransform);
+    Model tree2("res/models/house/tree_open.fbx");
+    sceneObjects.push_back(&tree2);
+    tree2.texture.load("res/textures/tree.png");
+    tree2.modelTransform.move(glm::vec3(-70.0f, 0.0f, -70.0f));
+    tree2.modelTransform.rotate(glm::vec3(glm::radians(-90.0f), 0.0f, 0.0f));
+    tree2.modelTransform.scale(glm::vec3(8.0f));
+    sceneRoot.addChild(&tree2.modelTransform);
 
-    Model roof("res/models/house_roof.fbx", false, &roofOffsets);
-    sceneObjects.push_back(&roof);
-    roof.texture.load("res/textures/reed_roof_03_diff_2k.png");
-    base.modelTransform.addChild(&roof.modelTransform);
+
+    Transform houseRoot;
+    houseRoot.scale(glm::vec3(5.0f, 5.0f, 5.0f));
+    sceneRoot.addChild(&houseRoot);
+
+    Model house_exterior("res/models/house/house_exterior.fbx");
+    sceneObjects.push_back(&house_exterior);
+    house_exterior.texture.load("res/textures/HouseTexture1.png");
+    house_exterior.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
+    houseRoot.addChild(&house_exterior.modelTransform);
+
+    Model house_interior("res/models/house/house_interior.fbx");
+    sceneObjects.push_back(&house_interior);
+    house_interior.texture.load("res/textures/HouseTexture1.png");
+    house_interior.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
+    houseRoot.addChild(&house_interior.modelTransform);
+
+    Model door_closed("res/models/house/door_closed.fbx");
+    sceneObjects.push_back(&door_closed);
+    door_closed.texture.load("res/textures/HouseTexture1.png");
+    door_closed.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
+    houseRoot.addChild(&door_closed.modelTransform);
+
+    Model door_open("res/models/house/door_open.fbx");
+    sceneObjects.push_back(&door_open);
+    door_open.texture.load("res/textures/HouseTexture1.png");
+    door_open.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
+    houseRoot.addChild(&door_open.modelTransform);
+
+    Model cabinet("res/models/house/cabinet.fbx");
+    sceneObjects.push_back(&cabinet);
+    cabinet.texture.load("res/textures/blue_painted_planks_diff_2k.png");
+    cabinet.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
+    houseRoot.addChild(&cabinet.modelTransform);
+
+    Model tv("res/models/house/tv.fbx");
+    sceneObjects.push_back(&tv);
+    tv.texture.load("res/textures/white.jpg");
+    tv.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
+    houseRoot.addChild(&tv.modelTransform);
+
+    Model screen("res/models/house/screen.fbx");
+    sceneObjects.push_back(&screen);
+    screen.texture.load("res/textures/monke.jpg");
+    screen.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
+    houseRoot.addChild(&screen.modelTransform);
+
 
 
     bool wireframe = false;
@@ -332,19 +356,6 @@ int main()
         
         viewMatrix = glm::lookAt(cameraPos, cameraPos + cameraFront, cameraUp);
         projectionMatrix = glm::perspective(glm::radians(60.0f), (float)WINDOW_WIDTH / WINDOW_HEIGHT, 0.01f, 15000.0f);
-
-        // House translation logic
-        if (housePosition != housePositionLastFrame || roofPosition != roofPositionLastFrame)
-        {
-            roofOffsets[((gridY * gridX) / 2) - gridX / 2].reset();
-            houseOffsets[((gridY * gridX) / 2) - gridX / 2].reset();
-
-            roofOffsets[((gridY * gridX) / 2) - gridX / 2].move(glm::vec3(roofPosition));
-            houseOffsets[((gridY * gridX) / 2) - gridX / 2].move(glm::vec3(housePosition));
-
-            base.updateInstanceMatrices();
-            roof.updateInstanceMatrices();
-        }
 
         housePositionLastFrame = housePosition;
         roofPositionLastFrame = roofPosition;
