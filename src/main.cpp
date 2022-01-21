@@ -29,6 +29,10 @@ bool wasEscapePressedLastFrame = false;
 bool cursorEnabled = false;
 bool wasDoorOpenLastFrame = false;
 bool isDoorOpen = false;
+bool wasTvOpenLastFrame = false;
+bool isTvOpen = false;
+
+int animFrame = 0;
 
 float cameraSpeed = 12.0f;
 float cameraMultiplier = 4.0f;
@@ -73,6 +77,20 @@ void processInput(GLFWwindow* window) //WYWO£YWANY CO KLATKÊ, zczytuje imput z k
     else if (f == GLFW_RELEASE)
     {
         wasDoorOpenLastFrame = false;
+    }
+
+    int e = glfwGetKey(window, GLFW_KEY_E); //glfwgetkey przekazuje stan klawisza
+    if (e == GLFW_PRESS)
+    {
+        if (!wasTvOpenLastFrame)
+        {
+            isTvOpen = !isTvOpen;
+        }
+        wasTvOpenLastFrame = true;
+    }
+    else if (e == GLFW_RELEASE)
+    {
+        wasTvOpenLastFrame = false;
     }
 
     float deltaSpeed = cameraSpeed * deltaTime; // adjust accordingly, delta speed to camera speed ustawiony przez nas (dostosowuje w zaleznosci od trwania klatki)
@@ -287,9 +305,18 @@ int main()
     tv.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
     houseRoot.addChild(&tv.modelTransform);
 
+    Texture frames[4];
+    frames[0].load("res/textures/animation/2.png");
+    frames[1].load("res/textures/animation/1.jpg");
+    frames[2].load("res/textures/animation/3.jpg");
+    frames[3].load("res/textures/animation/7.png");
+
+    Texture black;
+    black.load("res/textures/black.jpg");
+
     Model screen("res/models/house/screen.fbx");
     sceneObjects.push_back(&screen);
-    screen.texture.load("res/textures/monke.jpg");
+    screen.texture = frames[0];
     screen.modelTransform.rotate(glm::vec3(glm::radians(270.0f), 0.0f, 0.0f));
     houseRoot.addChild(&screen.modelTransform);
 
@@ -492,6 +519,16 @@ int main()
         phongShader.setVec3("viewPos", cameraPos);
         phongShader.setMat4("view", viewMatrix);
         phongShader.setMat4("projection", projectionMatrix);
+
+        animFrame++;
+        if (isTvOpen)
+        {
+           screen.texture = frames[(animFrame / 15) % 4];
+        }
+        else
+        {
+            screen.texture = black;
+        }
 
         for (int i = 0; i < sceneObjects.size(); i++)
         {
