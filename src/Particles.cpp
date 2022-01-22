@@ -13,7 +13,7 @@ Particles::Particles(Model* particleModel, Shader* shader, Transform* root, int 
 	spawnedParticles.reserve(maxParticles);
 }
 
-void Particles::UpdateAndRender()
+void Particles::UpdateAndRender(Shader* shader)
 {
 	std::default_random_engine generator(currentFrame);
 	// Spawning
@@ -70,7 +70,14 @@ void Particles::UpdateAndRender()
 
 	// Rendering
 	particleModel->updateInstanceMatrices(&particleTransforms);
-	particleModel->draw(*shader);
+	if (shader != nullptr)
+	{
+		particleModel->draw(*shader);
+	}
+	else
+	{
+		particleModel->draw(*this->shader);
+	}
 
 	currentFrame++;
 }

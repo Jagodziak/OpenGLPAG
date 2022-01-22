@@ -19,7 +19,7 @@ class Particles
 public:
 	Particles(Model* particleModel, Shader* shader, Transform* root, int maxParticles, int spawnEveryXFrames);
 
-	void UpdateAndRender();
+	void UpdateAndRender(Shader* shader = nullptr);
 
 	glm::vec3 initialSpeed = glm::vec3(0.0f, 0.5f, 0.0f);
 	glm::ivec2 lifetimeRandRange = glm::ivec2(40, 700);

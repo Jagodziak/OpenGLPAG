@@ -9,8 +9,6 @@
 Shader::Shader(std::string vertexShaderPath, std::string fragmentShaderPath)
 {
     // ----- VERTEX SHADER -----
-
-    
     std::ifstream shaderFile(vertexShaderPath);
     std::stringstream buffer;
     buffer << shaderFile.rdbuf();

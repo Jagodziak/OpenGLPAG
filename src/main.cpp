@@ -17,6 +17,8 @@
 #include "Shader.hpp"
 #include "Model.hpp"
 #include "Particles.hpp"
+#include <Cubemap.hpp>
+#include <Skybox.hpp>
 
 const int WINDOW_WIDTH = 1920, WINDOW_HEIGHT = 1080;
 
@@ -196,15 +198,15 @@ int main()
     
     ImGui::StyleColorsDark();
 
-    Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag"); //
+    Shader basicShader("res/shaders/basic.vert", "res/shaders/basic.frag");
     Shader phongShader("res/shaders/phong.vert", "res/shaders/phong.frag");
+    Shader skyboxShader("res/shaders/skybox.vert", "res/shaders/skybox.frag");
+    Shader reflectShader("res/shaders/reflect.vert", "res/shaders/reflect.frag");
+    Shader refractShader("res/shaders/refract.vert", "res/shaders/refract.frag");
 
     std::vector<Model*> sceneObjects;
 
-    Model skybox("res/models/skybox.fbx");
-    skybox.texture.load("res/textures/spiaggia_di_mondello_4k.png");
-    skybox.modelTransform.rotate(glm::vec3(glm::radians(180.0f), 0.0f, 0.0f));
-    skybox.modelTransform.scale(glm::vec3(12.0f, 12.0f, 12.0f));
+    Skybox skybox("res/textures/cubemap/");
 
     Transform sceneRoot;
 
@@ -263,7 +265,7 @@ int main()
     particleBox.texture.load("res/textures/white.jpg");
     particleBox.modelTransform.move(glm::vec3(26.0f, 63.0f, 15.0f));
     sceneRoot.addChild(&particleBox.modelTransform);
-    Particles particles(&particleBox, &phongShader, &sceneRoot, 250, 15);
+    Particles particles(&particleBox, &refractShader, &sceneRoot, 250, 15);
 
     Transform houseRoot;
     houseRoot.scale(glm::vec3(5.0f, 5.0f, 5.0f));
@@ -423,6 +425,7 @@ int main()
         glViewport(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT);
 
         glEnable(GL_DEPTH_TEST);
+        glDepthFunc(GL_LEQUAL);
 
         glClearColor(clear_color.x, clear_color.y, clear_color.z, clear_color.w);  
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); 
@@ -441,16 +444,14 @@ int main()
         roofPositionLastFrame = roofPosition;
 
         // Setting ambient lighting, skybox reaguje na kolor ambientu i kierunkowego
-        basicShader.use();
-        glm::vec3 skyboxColor = glm::vec3(0.0f);
+        glm::vec3 ambientColor = glm::vec3(0.0f);
         if (ambientEnabled)
-            skyboxColor += ambient;
+            ambientColor += ambient;
         if (directionalEnabled)
-            skyboxColor += directionalLight0Color;
-        basicShader.setVec3("ambient", skyboxColor);
+            ambientColor += directionalLight0Color;
+        basicShader.setVec3("ambient", ambientColor);
         basicShader.setMat4("view", viewMatrix);
         basicShader.setMat4("projection", projectionMatrix);
-        skybox.draw(basicShader);
 
         //skybox and lights render with basic shader
 
@@ -532,18 +533,38 @@ int main()
 
         for (int i = 0; i < sceneObjects.size(); i++)
         {
-            sceneObjects[i]->draw(phongShader);
+            sceneObjects[i]->draw(phongShader); //
         }
 
+        refractShader.use();
+        refractShader.setMat4("view", viewMatrix);
+        refractShader.setMat4("projection", projectionMatrix);
+        refractShader.setVec3("cameraPos", cameraPos);
+        glActiveTexture(GL_TEXTURE1); // Activate texture unit 0
+        glBindTexture(GL_TEXTURE_2D, skybox.cubemap.getCubemapId());
+        refractShader.setInt("cubemap", 1);
+        particles.UpdateAndRender(&refractShader);//
+
+        reflectShader.use();
+        reflectShader.setMat4("view", viewMatrix);
+        reflectShader.setMat4("projection", projectionMatrix);
+        reflectShader.setVec3("cameraPos", cameraPos);
+        glActiveTexture(GL_TEXTURE0); // Activate texture unit 0
+        glBindTexture(GL_TEXTURE_2D, skybox.cubemap.getCubemapId());
+        reflectShader.setInt("cubemap", 0);
         if (isDoorOpen)
         {
-            door_open.draw(phongShader);
+            door_open.draw(reflectShader);
         }
         else
         {
-            door_closed.draw(phongShader);
+            door_closed.draw(reflectShader);
         }
-        particles.UpdateAndRender();
+
+        skyboxShader.use();
+        skyboxShader.setMat4("view", glm::mat4(glm::mat3(viewMatrix)));
+        skyboxShader.setMat4("projection", projectionMatrix);
+        skybox.draw(skyboxShader);
 
         // Imgui ui render
         ImGui::Render();
